@@ -343,9 +343,8 @@ tr:hover td{background:#F5F7FF}
 .notice-banner{display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#FFF8E1,#FFFDE7);border:1.5px solid #FFB300;border-radius:9px;padding:8px 11px;margin-bottom:10px;overflow:hidden}
 .notice-banner-icon{flex-shrink:0;font-size:15px}
 .notice-track{flex:1;overflow:hidden;position:relative;height:20px}
-.notice-scroll{display:inline-block;white-space:nowrap;font-size:12px;font-weight:700;color:#E65100;line-height:20px;animation:nticker 18s linear infinite}
+.notice-scroll{position:absolute;top:0;left:0;display:inline-block;white-space:nowrap;font-size:12px;font-weight:700;color:#E65100;line-height:20px;will-change:transform}
 .notice-short{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;font-weight:700;color:#E65100;line-height:20px}
-@keyframes nticker{0%{transform:translateX(100%)}100%{transform:translateX(-150%)}}
 </style>
 </head>
 <body>
@@ -1182,9 +1181,34 @@ function _noticeBanner() {
   if (S.role === 'owner' || !S.activeNotice || !S.activeNotice.content) return '';
   var txt = S.activeNotice.content;
   var inner = txt.length > 36
-    ? '<span class="notice-scroll">'+txt+'</span>'
+    ? '<span class="notice-scroll" id="notice-ticker-el">'+txt+'</span>'
     : '<span class="notice-short">'+txt+'</span>';
   return '<div class="notice-banner"><span class="notice-banner-icon">📢</span><div class="notice-track">'+inner+'</div></div>';
+}
+
+// ── Notice ticker engine (smooth, seamless, pixel-based) ──────────────
+var _tickerRAF = null;
+function _tickerStart() {
+  if (_tickerRAF) { cancelAnimationFrame(_tickerRAF); _tickerRAF = null; }
+  var el = document.getElementById('notice-ticker-el');
+  if (!el) return;
+  var track = el.parentElement; // .notice-track
+  var trackW = track.clientWidth;
+  var textW  = el.scrollWidth;
+  var px = trackW + 10; // start fully off-screen right
+  var speed = 55; // px/second — comfortable reading pace
+  var last = null;
+  el.style.transform = 'translateX(' + px + 'px)';
+  function tick(ts) {
+    if (last === null) last = ts;
+    var dt = Math.min((ts - last) / 1000, 0.05); // cap at 50ms to avoid jumps after tab switch
+    last = ts;
+    px -= speed * dt;
+    if (px < -(textW + 20)) { px = trackW + 10; } // seamless loop — reset instantly
+    el.style.transform = 'translateX(' + px + 'px)';
+    _tickerRAF = requestAnimationFrame(tick);
+  }
+  _tickerRAF = requestAnimationFrame(tick);
 }
 
 function renderDash(d) {
@@ -1316,6 +1340,7 @@ function renderDash(d) {
   }
   h+='<div style="text-align:center;font-size:10px;color:var(--mt2);padding:8px">Miron Electronics v7 · Powered by <span style="color:#FFD700;font-weight:700">AXIION</span></div>';
   document.getElementById('pg-dash').innerHTML = h;
+  setTimeout(_tickerStart, 50);
 }
 
 // ══════════════════════════════════════════════════════
@@ -1369,6 +1394,7 @@ function renderSoDash() {
   else if (S.soTab==='catalogue') h+=buildShowcasePage();
   h+='<div style="text-align:center;font-size:10px;color:var(--mt2);padding:8px">Miron Electronics · Powered by <span style="color:#FFD700;font-weight:700">AXIION</span></div>';
   el.innerHTML = h;
+  setTimeout(_tickerStart, 50);
 }
 
 function _soOverview() {
@@ -1697,6 +1723,7 @@ function renderDsrTxTab(txs, fromDate, toDate) {
   }
   h+='<div style="text-align:center;font-size:10px;color:var(--mt2);padding:8px">Miron Electronics · Powered by <span style="color:#FFD700;font-weight:700">AXIION</span></div>';
   document.getElementById('pg-dash').innerHTML = h;
+  setTimeout(_tickerStart, 50);
 }
 
 async function _loadDsrDuesView() {
@@ -1731,6 +1758,7 @@ async function _loadDsrDuesView() {
   h+='</div>';
   h+='<div style="text-align:center;font-size:10px;color:var(--mt2);padding:8px">Miron Electronics · Powered by <span style="color:#FFD700;font-weight:700">AXIION</span></div>';
   el.innerHTML = h;
+  setTimeout(_tickerStart, 50);
 }
 
 async function _loadDsrProductsView() {
@@ -1742,7 +1770,7 @@ async function _loadDsrProductsView() {
   hideOvl();
   var el=document.getElementById('pg-dash'); if(!el) return;
   var h=_dsrTabBar()+'<div class="ct">📦 পণ্য ক্যাটালগ</div>';
-  if (!S.products.length) { el.innerHTML=h+'<div class="card" style="text-align:center;color:var(--mt2);padding:20px">কোনো পণ্য নেই</div>'; return; }
+  if (!S.products.length) { el.innerHTML=h+'<div class="card" style="text-align:center;color:var(--mt2);padding:20px">কোনো পণ্য নেই</div>'; setTimeout(_tickerStart,50); return; }
   h+='<div class="card" style="padding:0;overflow:hidden">';
   S.products.forEach(function(p){
     var ti=thumbImg(p,'8px');
@@ -1756,6 +1784,7 @@ async function _loadDsrProductsView() {
   h+='</div>';
   h+='<div style="text-align:center;font-size:10px;color:var(--mt2);padding:8px">Miron Electronics · Powered by <span style="color:#FFD700;font-weight:700">AXIION</span></div>';
   el.innerHTML = h;
+  setTimeout(_tickerStart, 50);
 }
 
 
