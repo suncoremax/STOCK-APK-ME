@@ -309,7 +309,7 @@ tr:hover td{background:#F5F7FF}
 .pay-prog-fill{height:100%;border-radius:3px;background:var(--gr);transition:.3s}
 
 /* ── Extra Features Tab ── */
-.xf-subnav{display:flex;background:var(--seg-bg);border-radius:8px;padding:3px;gap:2px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.xf-subnav{display:flex;flex-wrap:wrap;background:var(--seg-bg);border-radius:8px;padding:3px;gap:2px;margin-bottom:14px}
 .xf-subnav::-webkit-scrollbar{display:none}
 .xf-sbt{flex:0 0 auto;padding:7px 11px;border-radius:6px;border:none;background:none;font-size:11px;font-weight:700;color:var(--mt);cursor:pointer;font-family:'Hind Siliguri',sans-serif;transition:.12s;text-align:center;white-space:nowrap}
 .xf-sbt.active{background:#fff;color:var(--bl);box-shadow:0 1px 3px rgba(13,71,161,.15)}
@@ -741,89 +741,132 @@ async function noticeClear() {
 //  IMPORTANT NUMBERS — Contact Directory
 // ════════════════════════════════════════════════════
 var _impContacts = [];
-var _impEditId   = null;
+var _impEditId     = null;
+var _impManageOpen = false;
 
 async function loadImpNumbers() {
   var el = document.getElementById('imp-wrap'); if (!el) return;
   el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--mt2)">লোড হচ্ছে...</div>';
   var r = await apiGet('/api/expenses?action=contacts-list');
   if (!r || !r.ok) { el.innerHTML = '<div style="padding:16px;color:var(--re)">লোড ব্যর্থ</div>'; return; }
-  _impContacts = r.contacts || [];
-  _impEditId   = null;
+  _impContacts   = r.contacts || [];
+  _impEditId     = null;
+  _impManageOpen = false;
   renderImpNumbers();
 }
 
 function renderImpNumbers() {
   var el = document.getElementById('imp-wrap'); if (!el) return;
-  var canEdit = (S.role === 'owner' || S.role === 'manager');
   var h = '';
 
-  // ── Add form ─────────────────────────────────────────
-  h += '<div class="ct">➕ নতুন কন্টাক্ট যোগ করুন</div>';
-  h += '<div class="card" style="margin-bottom:12px">';
-  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-  h += '<div class="fg"><label class="fl">নাম *</label><input type="text" id="ic-name" placeholder="যেমন: মিলন ভাই" maxlength="80"></div>';
-  h += '<div class="fg"><label class="fl">পদবি / ভূমিকা</label><input type="text" id="ic-role" placeholder="DSR, Supplier…" maxlength="60"></div>';
-  h += '</div>';
-  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
-  h += '<div class="fg"><label class="fl">ফোন নম্বর</label><input type="tel" id="ic-phone" placeholder="01XXXXXXXXX" maxlength="20"></div>';
-  h += '<div class="fg"><label class="fl">বিশেষ নোট</label><input type="text" id="ic-note" placeholder="যেকোনো তথ্য" maxlength="120"></div>';
-  h += '</div>';
-  h += '<button class="btn btn-bl btn-w" style="margin-top:10px" ontouchstart="impAdd();event.preventDefault()" onclick="impAdd()">➕ যোগ করুন</button>';
-  h += '</div>';
+  if (!_impManageOpen) {
+    // ══ MAIN VIEW: Manage Contacts card + read-only list ══
 
-  // ── Contact list ─────────────────────────────────────
-  h += '<div class="ct">📞 কন্টাক্ট তালিকা <span style="font-size:11px;font-weight:400;color:var(--mt2)">('+_impContacts.length+'টি এন্ট্রি)</span></div>';
-
-  if (!_impContacts.length) {
-    h += '<div class="card" style="text-align:center;padding:28px;color:var(--mt2)"><div style="font-size:36px;margin-bottom:8px">📭</div>এখনো কোনো কন্টাক্ট যোগ করা হয়নি</div>';
-  } else {
-    h += '<div class="card" style="padding:0;overflow:hidden">';
-    // Header row
-    var hdrCls = canEdit ? 'ic-tbl-hdr' : 'ic-tbl-hdr no-act';
-    h += '<div class="'+hdrCls+'">';
-    h += '<span>নাম</span><span>পদবি</span><span>ফোন নম্বর</span><span>বিশেষ নোট</span>';
-    if (canEdit) h += '<span style="text-align:center">অ্যাকশন</span>';
+    // ── ⚙️ Manage Contacts tappable card ─────────────────
+    h += '<div class="card" style="display:flex;align-items:center;gap:13px;padding:14px 16px;cursor:pointer;border:1.5px solid var(--bdr);margin-bottom:14px;transition:.15s;user-select:none" ontouchstart="impOpenManage();event.preventDefault()" onclick="impOpenManage()">';
+    h += '<div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--bl),#1565C0);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">\u2699\ufe0f</div>';
+    h += '<div style="flex:1">';
+    h += '<div style="font-size:14px;font-weight:700;color:var(--txt)">Manage Contacts</div>';
+    h += '<div style="font-size:11px;color:var(--mt2);margin-top:2px">\u0995\u09a8\u09cd\u099f\u09be\u0995\u09cd\u099f \u09af\u09cb\u0997, \u09b8\u09ae\u09cd\u09aa\u09be\u09a6\u09a8\u09be \u0993 \u09ae\u09c1\u099b\u09c1\u09a8</div>';
+    h += '</div>';
+    h += '<div style="color:var(--mt2);font-size:20px;font-weight:300">\u203a</div>';
     h += '</div>';
 
-    _impContacts.forEach(function(c) {
-      if (_impEditId === c.id) {
-        // ── Inline edit block ────────────────────────────
-        h += '<div class="ic-edit-block">';
-        h += '<div class="ct" style="font-size:12px;margin-bottom:8px">✏️ এন্ট্রি সম্পাদনা করুন</div>';
-        h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">';
-        h += '<div class="fg"><label class="fl">নাম *</label><input type="text" id="ie-name" value="'+esc(c.name)+'" maxlength="80"></div>';
-        h += '<div class="fg"><label class="fl">পদবি</label><input type="text" id="ie-role" value="'+esc(c.role)+'" maxlength="60"></div>';
+    // ── Read-only All Numbers list ────────────────────────
+    h += '<div class="ct">\ud83d\udcde \u09b8\u0995\u09b2 \u09a8\u09ae\u09cd\u09ac\u09b0 <span style="font-size:11px;font-weight:400;color:var(--mt2)">('+_impContacts.length+'\u099f\u09bf)</span></div>';
+
+    if (!_impContacts.length) {
+      h += '<div class="card" style="text-align:center;padding:32px;color:var(--mt2)"><div style="font-size:40px;margin-bottom:10px">\ud83d\udced</div><div style="font-size:13px">\u098f\u0996\u09a8\u09cb \u0995\u09cb\u09a8\u09cb \u0995\u09a8\u09cd\u099f\u09be\u0995\u09cd\u099f \u09af\u09cb\u0997 \u0995\u09b0\u09be \u09b9\u09af\u09bc\u09a8\u09bf</div><div style="font-size:11px;margin-top:6px">\u2699\ufe0f Manage Contacts \u09a5\u09c7\u0995\u09c7 \u09af\u09cb\u0997 \u0995\u09b0\u09c1\u09a8</div></div>';
+    } else {
+      var avatarColors = ['#1565C0','#2E7D32','#C62828','#6A1B9A','#00838F','#E65100','#283593','#558B2F'];
+      _impContacts.forEach(function(c, i) {
+        var initial = (c.name || '?').charAt(0).toUpperCase();
+        var aColor  = avatarColors[i % avatarColors.length];
+        h += '<div class="card" style="display:flex;align-items:center;gap:13px;padding:12px 14px;margin-bottom:8px">';
+        h += '<div style="width:44px;height:44px;border-radius:50%;background:'+aColor+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0">'+initial+'</div>';
+        h += '<div style="flex:1;min-width:0">';
+        h += '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:2px">';
+        h += '<span style="font-size:14px;font-weight:700;color:var(--txt)">'+esc(c.name)+'</span>';
+        if (c.role) h += '<span class="ic-role-pill">'+esc(c.role)+'</span>';
         h += '</div>';
-        h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px">';
-        h += '<div class="fg"><label class="fl">ফোন</label><input type="tel" id="ie-phone" value="'+esc(c.phone)+'" maxlength="20"></div>';
-        h += '<div class="fg"><label class="fl">নোট</label><input type="text" id="ie-note" value="'+esc(c.note)+'" maxlength="120"></div>';
-        h += '</div>';
-        h += '<div style="display:flex;gap:7px;margin-top:9px">';
-        h += '<button class="btn btn-bl" style="flex:1;font-size:12px" ontouchstart="impSaveEdit(\''+c.id+'\');event.preventDefault()" onclick="impSaveEdit(\''+c.id+'\')">✅ সেভ করুন</button>';
-        h += '<button class="btn btn-gh" style="flex:1;font-size:12px" ontouchstart="_impEditId=null;renderImpNumbers();event.preventDefault()" onclick="_impEditId=null;renderImpNumbers()">❌ বাতিল</button>';
+        if (c.phone) h += '<a class="ic-phone-lnk" href="tel:'+esc(c.phone)+'" style="display:inline-block;margin-top:1px;font-size:12px">\ud83d\udcde '+esc(c.phone)+'</a>';
+        if (c.note)  h += '<div style="font-size:11px;color:var(--mt);font-style:italic;margin-top:3px;line-height:1.4">'+esc(c.note)+'</div>';
         h += '</div></div>';
-      } else {
-        // ── Normal read-only row ─────────────────────────
-        var rowCls = canEdit ? 'ic-row' : 'ic-row no-act';
-        h += '<div class="'+rowCls+'">';
-        h += '<div class="ic-name">'+esc(c.name)+'</div>';
-        h += '<div>'+(c.role ? '<span class="ic-role-pill">'+esc(c.role)+'</span>' : '<span style="color:var(--mt2);font-size:11px">—</span>')+'</div>';
-        h += '<div>'+(c.phone ? '<a class="ic-phone-lnk" href="tel:'+esc(c.phone)+'">📞 '+esc(c.phone)+'</a>' : '<span style="color:var(--mt2);font-size:11px">—</span>')+'</div>';
-        h += '<div class="ic-note-txt">'+(c.note ? esc(c.note) : '<span style="color:var(--mt2)">—</span>')+'</div>';
-        if (canEdit) {
-          h += '<div class="ic-act-cell" style="display:flex;gap:5px;justify-content:center">';
-          h += '<button class="btn" style="background:var(--am);color:#fff;padding:5px 9px;font-size:11px" ontouchstart="impEdit(\''+c.id+'\');event.preventDefault()" onclick="impEdit(\''+c.id+'\')">✏️</button>';
-          h += '<button class="btn" style="background:var(--re);color:#fff;padding:5px 9px;font-size:11px" ontouchstart="impDel(\''+c.id+'\',\''+esc(c.name)+'\');event.preventDefault()" onclick="impDel(\''+c.id+'\',\''+esc(c.name)+'\')">🗑</button>';
+      });
+    }
+
+  } else {
+    // ══ MANAGE VIEW: back button + add form + list with edit/delete ══
+
+    h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">';
+    h += '<button class="btn btn-gh" style="padding:7px 14px;font-size:12px;font-weight:700" ontouchstart="impCloseManage();event.preventDefault()" onclick="impCloseManage()">\u2190 \u09ab\u09bf\u09b0\u09c7 \u09af\u09be\u09a8</button>';
+    h += '<div style="font-size:13px;font-weight:700;color:var(--txt)">\u2699\ufe0f \u0995\u09a8\u09cd\u099f\u09be\u0995\u09cd\u099f \u09aa\u09b0\u09bf\u099a\u09be\u09b2\u09a8\u09be</div>';
+    h += '</div>';
+
+    h += '<div class="ct">\u2795 \u09a8\u09a4\u09c1\u09a8 \u0995\u09a8\u09cd\u099f\u09be\u0995\u09cd\u099f \u09af\u09cb\u0997 \u0995\u09b0\u09c1\u09a8</div>';
+    h += '<div class="card" style="margin-bottom:12px">';
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+    h += '<div class="fg"><label class="fl">\u09a8\u09be\u09ae *</label><input type="text" id="ic-name" placeholder="\u09af\u09c7\u09ae\u09a8: \u09ae\u09bf\u09b2\u09a8 \u09ad\u09be\u0987" maxlength="80"></div>';
+    h += '<div class="fg"><label class="fl">\u09aa\u09a6\u09ac\u09bf / \u09ad\u09c2\u09ae\u09bf\u0995\u09be</label><input type="text" id="ic-role" placeholder="DSR, Supplier\u2026" maxlength="60"></div>';
+    h += '</div>';
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
+    h += '<div class="fg"><label class="fl">\u09ab\u09cb\u09a8 \u09a8\u09ae\u09cd\u09ac\u09b0</label><input type="tel" id="ic-phone" placeholder="01XXXXXXXXX" maxlength="20"></div>';
+    h += '<div class="fg"><label class="fl">\u09ac\u09bf\u09b6\u09c7\u09b7 \u09a8\u09cb\u099f</label><input type="text" id="ic-note" placeholder="\u09af\u09c7\u0995\u09cb\u09a8\u09cb \u09a4\u09a5\u09cd\u09af" maxlength="120"></div>';
+    h += '</div>';
+    h += '<button class="btn btn-bl btn-w" style="margin-top:10px" ontouchstart="impAdd();event.preventDefault()" onclick="impAdd()">\u2795 \u09af\u09cb\u0997 \u0995\u09b0\u09c1\u09a8</button>';
+    h += '</div>';
+
+    h += '<div class="ct">\ud83d\udcde \u0995\u09a8\u09cd\u099f\u09be\u0995\u09cd\u099f \u09a4\u09be\u09b2\u09bf\u0995\u09be <span style="font-size:11px;font-weight:400;color:var(--mt2)">('+_impContacts.length+'\u099f\u09bf \u098f\u09a8\u09cd\u099f\u09cd\u09b0\u09bf)</span></div>';
+
+    if (!_impContacts.length) {
+      h += '<div class="card" style="text-align:center;padding:28px;color:var(--mt2)"><div style="font-size:36px;margin-bottom:8px">\ud83d\udced</div>\u098f\u0996\u09a8\u09cb \u0995\u09cb\u09a8\u09cb \u0995\u09a8\u09cd\u099f\u09be\u0995\u09cd\u099f \u09af\u09cb\u0997 \u0995\u09b0\u09be \u09b9\u09af\u09bc\u09a8\u09bf</div>';
+    } else {
+      h += '<div class="card" style="padding:0;overflow:hidden">';
+      h += '<div class="ic-tbl-hdr"><span>\u09a8\u09be\u09ae</span><span>\u09aa\u09a6\u09ac\u09bf</span><span>\u09ab\u09cb\u09a8 \u09a8\u09ae\u09cd\u09ac\u09b0</span><span>\u09ac\u09bf\u09b6\u09c7\u09b7 \u09a8\u09cb\u099f</span><span style="text-align:center">\u0985\u09cd\u09af\u09be\u0995\u09b6\u09a8</span></div>';
+      _impContacts.forEach(function(c) {
+        if (_impEditId === c.id) {
+          h += '<div class="ic-edit-block">';
+          h += '<div class="ct" style="font-size:12px;margin-bottom:8px">\u270f\ufe0f \u098f\u09a8\u09cd\u099f\u09cd\u09b0\u09bf \u09b8\u09ae\u09cd\u09aa\u09be\u09a6\u09a8\u09be \u0995\u09b0\u09c1\u09a8</div>';
+          h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">';
+          h += '<div class="fg"><label class="fl">\u09a8\u09be\u09ae *</label><input type="text" id="ie-name" value="'+esc(c.name)+'" maxlength="80"></div>';
+          h += '<div class="fg"><label class="fl">\u09aa\u09a6\u09ac\u09bf</label><input type="text" id="ie-role" value="'+esc(c.role)+'" maxlength="60"></div>';
           h += '</div>';
+          h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px">';
+          h += '<div class="fg"><label class="fl">\u09ab\u09cb\u09a8</label><input type="tel" id="ie-phone" value="'+esc(c.phone)+'" maxlength="20"></div>';
+          h += '<div class="fg"><label class="fl">\u09a8\u09cb\u099f</label><input type="text" id="ie-note" value="'+esc(c.note)+'" maxlength="120"></div>';
+          h += '</div>';
+          h += '<div style="display:flex;gap:7px;margin-top:9px">';
+          h += '<button class="btn btn-bl" style="flex:1;font-size:12px" ontouchstart="impSaveEdit(\''+c.id+'\');event.preventDefault()" onclick="impSaveEdit(\''+c.id+'\')">\u2705 \u09b8\u09c7\u09ad \u0995\u09b0\u09c1\u09a8</button>';
+          h += '<button class="btn btn-gh" style="flex:1;font-size:12px" ontouchstart="_impEditId=null;renderImpNumbers();event.preventDefault()" onclick="_impEditId=null;renderImpNumbers()">\u274c \u09ac\u09be\u09a4\u09bf\u09b2</button>';
+          h += '</div></div>';
+        } else {
+          h += '<div class="ic-row">';
+          h += '<div class="ic-name">'+esc(c.name)+'</div>';
+          h += '<div>'+(c.role ? '<span class="ic-role-pill">'+esc(c.role)+'</span>' : '<span style="color:var(--mt2);font-size:11px">\u2014</span>')+'</div>';
+          h += '<div>'+(c.phone ? '<a class="ic-phone-lnk" href="tel:'+esc(c.phone)+'">\ud83d\udcde '+esc(c.phone)+'</a>' : '<span style="color:var(--mt2);font-size:11px">\u2014</span>')+'</div>';
+          h += '<div class="ic-note-txt">'+(c.note ? esc(c.note) : '<span style="color:var(--mt2)">\u2014</span>')+'</div>';
+          h += '<div class="ic-act-cell" style="display:flex;gap:5px;justify-content:center">';
+          h += '<button class="btn" style="background:var(--am);color:#fff;padding:5px 9px;font-size:11px" ontouchstart="impEdit(\''+c.id+'\');event.preventDefault()" onclick="impEdit(\''+c.id+'\')">\u270f\ufe0f</button>';
+          h += '<button class="btn" style="background:var(--re);color:#fff;padding:5px 9px;font-size:11px" ontouchstart="impDel(\''+c.id+'\',\''+esc(c.name)+'\');event.preventDefault()" onclick="impDel(\''+c.id+'\',\''+esc(c.name)+'\')">\ud83d\uddd1</button>';
+          h += '</div></div>';
         }
-        h += '</div>';
-      }
-    });
-    h += '</div>'; // close .card
+      });
+      h += '</div>';
+    }
   }
 
   el.innerHTML = h;
+}
+
+function impOpenManage() {
+  _impManageOpen = true;
+  renderImpNumbers();
+}
+
+function impCloseManage() {
+  _impManageOpen = false;
+  _impEditId     = null;
+  renderImpNumbers();
 }
 
 async function impAdd() {
@@ -1339,7 +1382,7 @@ var _numContacts = [], _numLoaded = false;
 
 function renderNumbersTab() {
   var el = document.getElementById('pg-numbers'); if (!el) return;
-  var canEdit = (S.role === 'owner' || S.role === 'manager');
+  var canEdit = true; // all roles can manage contacts
   var h = '<div class="ct">📞 গুরুত্বপূর্ণ নম্বর সমূহ</div>';
   if (!_numLoaded) {
     h += '<div class="card" style="text-align:center;padding:28px;color:var(--mt2)"><div style="font-size:32px;margin-bottom:8px">📡</div>লোড হচ্ছে...</div>';
