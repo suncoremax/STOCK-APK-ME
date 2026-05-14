@@ -758,21 +758,19 @@ function renderImpNumbers() {
   var canEdit = true;
   var h = '';
 
-  // ── Add form (owner only) ─────────────────────────────
-  if (canEdit) {
-    h += '<div class="ct">➕ নতুন কন্টাক্ট যোগ করুন</div>';
-    h += '<div class="card" style="margin-bottom:12px">';
-    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-    h += '<div class="fg"><label class="fl">নাম *</label><input type="text" id="ic-name" placeholder="যেমন: মিলন ভাই" maxlength="80"></div>';
-    h += '<div class="fg"><label class="fl">পদবি / ভূমিকা</label><input type="text" id="ic-role" placeholder="DSR, Supplier…" maxlength="60"></div>';
-    h += '</div>';
-    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
-    h += '<div class="fg"><label class="fl">ফোন নম্বর</label><input type="tel" id="ic-phone" placeholder="01XXXXXXXXX" maxlength="20"></div>';
-    h += '<div class="fg"><label class="fl">বিশেষ নোট</label><input type="text" id="ic-note" placeholder="যেকোনো তথ্য" maxlength="120"></div>';
-    h += '</div>';
-    h += '<button class="btn btn-bl btn-w" style="margin-top:10px" ontouchstart="impAdd();event.preventDefault()" onclick="impAdd()">➕ যোগ করুন</button>';
-    h += '</div>';
-  }
+  // ── Add form (all roles) ─────────────────────────────
+  h += '<div class="ct">➕ নতুন কন্টাক্ট যোগ করুন</div>';
+  h += '<div class="card" style="margin-bottom:12px">';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  h += '<div class="fg"><label class="fl">নাম *</label><input type="text" id="ic-name" placeholder="যেমন: মিলন ভাই" maxlength="80"></div>';
+  h += '<div class="fg"><label class="fl">পদবি / ভূমিকা</label><input type="text" id="ic-role" placeholder="DSR, Supplier…" maxlength="60"></div>';
+  h += '</div>';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
+  h += '<div class="fg"><label class="fl">ফোন নম্বর</label><input type="tel" id="ic-phone" placeholder="01XXXXXXXXX" maxlength="20"></div>';
+  h += '<div class="fg"><label class="fl">বিশেষ নোট</label><input type="text" id="ic-note" placeholder="যেকোনো তথ্য" maxlength="120"></div>';
+  h += '</div>';
+  h += '<button class="btn btn-bl btn-w" style="margin-top:10px" ontouchstart="impAdd();event.preventDefault()" onclick="impAdd()">➕ যোগ করুন</button>';
+  h += '</div>';
 
   // ── Contact list ─────────────────────────────────────
   h += '<div class="ct">📞 কন্টাক্ট তালিকা <span style="font-size:11px;font-weight:400;color:var(--mt2)">('+_impContacts.length+'টি এন্ট্রি)</span></div>';
