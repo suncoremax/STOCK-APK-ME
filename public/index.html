@@ -309,7 +309,7 @@ tr:hover td{background:#F5F7FF}
 .pay-prog-fill{height:100%;border-radius:3px;background:var(--gr);transition:.3s}
 
 /* ── Extra Features Tab ── */
-.xf-subnav{display:flex;background:var(--seg-bg);border-radius:8px;padding:3px;gap:2px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.xf-subnav{display:flex;flex-wrap:wrap;background:var(--seg-bg);border-radius:8px;padding:3px;gap:2px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .xf-subnav::-webkit-scrollbar{display:none}
 .xf-sbt{flex:0 0 auto;padding:7px 11px;border-radius:6px;border:none;background:none;font-size:11px;font-weight:700;color:var(--mt);cursor:pointer;font-family:'Hind Siliguri',sans-serif;transition:.12s;text-align:center;white-space:nowrap}
 .xf-sbt.active{background:#fff;color:var(--bl);box-shadow:0 1px 3px rgba(13,71,161,.15)}
@@ -755,22 +755,24 @@ async function loadImpNumbers() {
 
 function renderImpNumbers() {
   var el = document.getElementById('imp-wrap'); if (!el) return;
-  var canEdit = (S.role === 'owner' || S.role === 'manager');
+  var canEdit = true;
   var h = '';
 
-  // ── Add form ─────────────────────────────────────────
-  h += '<div class="ct">➕ নতুন কন্টাক্ট যোগ করুন</div>';
-  h += '<div class="card" style="margin-bottom:12px">';
-  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-  h += '<div class="fg"><label class="fl">নাম *</label><input type="text" id="ic-name" placeholder="যেমন: মিলন ভাই" maxlength="80"></div>';
-  h += '<div class="fg"><label class="fl">পদবি / ভূমিকা</label><input type="text" id="ic-role" placeholder="DSR, Supplier…" maxlength="60"></div>';
-  h += '</div>';
-  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
-  h += '<div class="fg"><label class="fl">ফোন নম্বর</label><input type="tel" id="ic-phone" placeholder="01XXXXXXXXX" maxlength="20"></div>';
-  h += '<div class="fg"><label class="fl">বিশেষ নোট</label><input type="text" id="ic-note" placeholder="যেকোনো তথ্য" maxlength="120"></div>';
-  h += '</div>';
-  h += '<button class="btn btn-bl btn-w" style="margin-top:10px" ontouchstart="impAdd();event.preventDefault()" onclick="impAdd()">➕ যোগ করুন</button>';
-  h += '</div>';
+  // ── Add form (owner only) ─────────────────────────────
+  if (canEdit) {
+    h += '<div class="ct">➕ নতুন কন্টাক্ট যোগ করুন</div>';
+    h += '<div class="card" style="margin-bottom:12px">';
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+    h += '<div class="fg"><label class="fl">নাম *</label><input type="text" id="ic-name" placeholder="যেমন: মিলন ভাই" maxlength="80"></div>';
+    h += '<div class="fg"><label class="fl">পদবি / ভূমিকা</label><input type="text" id="ic-role" placeholder="DSR, Supplier…" maxlength="60"></div>';
+    h += '</div>';
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
+    h += '<div class="fg"><label class="fl">ফোন নম্বর</label><input type="tel" id="ic-phone" placeholder="01XXXXXXXXX" maxlength="20"></div>';
+    h += '<div class="fg"><label class="fl">বিশেষ নোট</label><input type="text" id="ic-note" placeholder="যেকোনো তথ্য" maxlength="120"></div>';
+    h += '</div>';
+    h += '<button class="btn btn-bl btn-w" style="margin-top:10px" ontouchstart="impAdd();event.preventDefault()" onclick="impAdd()">➕ যোগ করুন</button>';
+    h += '</div>';
+  }
 
   // ── Contact list ─────────────────────────────────────
   h += '<div class="ct">📞 কন্টাক্ট তালিকা <span style="font-size:11px;font-weight:400;color:var(--mt2)">('+_impContacts.length+'টি এন্ট্রি)</span></div>';
