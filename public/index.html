@@ -1341,8 +1341,24 @@ var _numContacts = [], _numLoaded = false;
 
 function renderNumbersTab() {
   var el = document.getElementById('pg-numbers'); if (!el) return;
-  var canEdit = (S.role === 'owner' || S.role === 'manager');
-  var h = '<div class="ct">📞 গুরুত্বপূর্ণ নম্বর সমূহ</div>';
+  var canEdit = true;
+  var h = '';
+
+  // ── Add form (all roles) ──────────────────────────────
+  h += '<div class="ct">➕ নতুন কন্টাক্ট যোগ করুন</div>';
+  h += '<div class="card" style="margin-bottom:12px">';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  h += '<div class="fg"><label class="fl">নাম *</label><input type="text" id="nc-name" placeholder="যেমন: মিলন ভাই" maxlength="80"></div>';
+  h += '<div class="fg"><label class="fl">পদবি / ভূমিকা</label><input type="text" id="nc-role" placeholder="DSR, Supplier…" maxlength="60"></div>';
+  h += '</div>';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
+  h += '<div class="fg"><label class="fl">ফোন নম্বর</label><input type="tel" id="nc-phone" placeholder="01XXXXXXXXX" maxlength="20"></div>';
+  h += '<div class="fg"><label class="fl">বিশেষ নোট</label><input type="text" id="nc-note" placeholder="যেকোনো তথ্য" maxlength="120"></div>';
+  h += '</div>';
+  h += '<button class="btn btn-bl btn-w" style="margin-top:10px" ontouchstart="numTabAdd();event.preventDefault()" onclick="numTabAdd()">➕ যোগ করুন</button>';
+  h += '</div>';
+
+  h += '<div class="ct">📞 গুরুত্বপূর্ণ নম্বর সমূহ</div>';
   if (!_numLoaded) {
     h += '<div class="card" style="text-align:center;padding:28px;color:var(--mt2)"><div style="font-size:32px;margin-bottom:8px">📡</div>লোড হচ্ছে...</div>';
     el.innerHTML = h;
@@ -1377,8 +1393,23 @@ function renderNumbersTab() {
     h += '</div>';
   });
   h += '</div>';
-  h += '<div style="text-align:center;font-size:10px;color:var(--mt2);padding:10px">'+_numContacts.length+'টি কন্টাক্ট'+(canEdit?' · পরিবর্তনের জন্য Extra → Important Numbers এ যান':'')+'</div>';
+  h += '<div style="text-align:center;font-size:10px;color:var(--mt2);padding:10px">'+_numContacts.length+'টি কন্টাক্ট'+'</div>';
   el.innerHTML = h;
+}
+
+async function numTabAdd() {
+  var name  = ((document.getElementById('nc-name') ||{}).value||'').trim();
+  var role  = ((document.getElementById('nc-role') ||{}).value||'').trim();
+  var phone = ((document.getElementById('nc-phone')||{}).value||'').trim();
+  var note  = ((document.getElementById('nc-note') ||{}).value||'').trim();
+  if (!name) return toast('নাম লিখুন');
+  showOvl('যোগ হচ্ছে...');
+  var r = await apiPost('/api/expenses?action=contacts-add', { name, role, phone, note, createdBy: S.userId });
+  hideOvl();
+  if (!r || !r.ok) return toast((r&&r.error)||'যোগ ব্যর্থ');
+  toast('✅ কন্টাক্ট যোগ হয়েছে');
+  _numLoaded = false;
+  renderNumbersTab();
 }
 
 async function _loadNumbersTab() {
