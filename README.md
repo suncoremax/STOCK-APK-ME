@@ -5,7 +5,7 @@ A mobile-first stock & sales management web app built with **Vercel serverless f
 
 ---
 
-## 🆕 What's New in V14 — Global Group Chat
+## 🆕 What's New in V1 — Global Group Chat
 
 ### Group Chat (Extra Features → Group Chat)
 - One single global chat room for the entire company — all roles can read and send messages
