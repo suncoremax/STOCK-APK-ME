@@ -309,7 +309,7 @@ tr:hover td{background:#F5F7FF}
 .pay-prog-fill{height:100%;border-radius:3px;background:var(--gr);transition:.3s}
 
 /* ── Extra Features Tab ── */
-.xf-subnav{display:flex;flex-wrap:wrap;background:var(--seg-bg);border-radius:8px;padding:3px;gap:2px;margin-bottom:14px}
+.xf-subnav{display:flex;background:var(--seg-bg);border-radius:8px;padding:3px;gap:2px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .xf-subnav::-webkit-scrollbar{display:none}
 .xf-sbt{flex:0 0 auto;padding:7px 11px;border-radius:6px;border:none;background:none;font-size:11px;font-weight:700;color:var(--mt);cursor:pointer;font-family:'Hind Siliguri',sans-serif;transition:.12s;text-align:center;white-space:nowrap}
 .xf-sbt.active{background:#fff;color:var(--bl);box-shadow:0 1px 3px rgba(13,71,161,.15)}
@@ -742,13 +742,6 @@ async function noticeClear() {
 // ════════════════════════════════════════════════════
 var _impContacts = [];
 var _impEditId   = null;
-var _impDelConfirmId = null;
-
-function _impAvatarColor(name) {
-  var colors = ['#1565C0','#2E7D32','#6A1B9A','#AD1457','#E65100','#00695C','#283593','#558B2F','#4527A0','#B71C1C'];
-  var i = 0; for (var k = 0; k < (name||'').length; k++) i += name.charCodeAt(k);
-  return colors[i % colors.length];
-}
 
 async function loadImpNumbers() {
   var el = document.getElementById('imp-wrap'); if (!el) return;
@@ -762,77 +755,12 @@ async function loadImpNumbers() {
 
 function renderImpNumbers() {
   var el = document.getElementById('imp-wrap'); if (!el) return;
+  var canEdit = (S.role === 'owner' || S.role === 'manager');
   var h = '';
 
-  // ── Manage Contacts button card ─────────────────────
-  h += '<div class="card" style="margin-bottom:14px;padding:0;overflow:hidden;cursor:pointer;border:2px solid var(--bl)" ontouchstart="openImpManage();event.preventDefault()" onclick="openImpManage()">';
-  h += '<div style="display:flex;align-items:center;gap:14px;padding:16px">';
-  h += '<div style="width:44px;height:44px;border-radius:12px;background:var(--bl);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">⚙️</div>';
-  h += '<div style="flex:1">';
-  h += '<div style="font-size:14px;font-weight:800;color:var(--bl)">Manage Contacts</div>';
-  h += '<div style="font-size:11px;color:var(--mt);margin-top:2px">যোগ করুন · সম্পাদনা করুন · মুছুন</div>';
-  h += '</div>';
-  h += '<div style="font-size:20px;color:var(--bl)">›</div>';
-  h += '</div></div>';
-
-  // ── All Numbers — read-only card list ───────────────
-  h += '<div style="font-size:12px;font-weight:700;color:var(--mt);letter-spacing:.4px;margin-bottom:10px">📞 ALL NUMBERS <span style="font-weight:400;color:var(--mt2)">('+_impContacts.length+'টি)</span></div>';
-
-  if (!_impContacts.length) {
-    h += '<div class="card" style="text-align:center;padding:32px;color:var(--mt2)"><div style="font-size:36px;margin-bottom:8px">📭</div>কোনো কন্টাক্ট নেই</div>';
-  } else {
-    _impContacts.forEach(function(c) {
-      var initial = c.name ? c.name.trim()[0].toUpperCase() : '?';
-      h += '<div class="card" style="margin-bottom:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:14px">';
-      h += '<div style="width:44px;height:44px;border-radius:50%;background:'+_impAvatarColor(c.name)+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.18)">'+initial+'</div>';
-      h += '<div style="flex:1;min-width:0">';
-      h += '<div style="font-size:14px;font-weight:800;color:var(--txt);margin-bottom:5px">'+esc(c.name)+'</div>';
-      if (c.role) h += '<span class="ic-role-pill" style="margin-bottom:6px;display:inline-block">'+esc(c.role)+'</span>';
-      if (c.phone) h += '<div style="margin-top:4px"><a class="ic-phone-lnk" href="tel:'+esc(c.phone)+'" style="font-size:13px;font-weight:700">📞 '+esc(c.phone)+'</a></div>';
-      if (c.note)  h += '<div style="margin-top:5px;font-size:11px;color:var(--mt);font-style:italic;line-height:1.4">'+esc(c.note)+'</div>';
-      h += '</div></div>';
-    });
-  }
-
-  el.innerHTML = h;
-}
-
-// ── Manage Contacts modal (bottom sheet) ────────────────
-function openImpManage() {
-  if (document.getElementById('imp-mgr-bg')) return;
-  var bg = document.createElement('div');
-  bg.id = 'imp-mgr-bg';
-  bg.className = 'due-modal-bg';
-  bg.style.zIndex = '8000';
-  bg.innerHTML =
-    '<div class="due-modal" style="max-height:90vh;padding:0;display:flex;flex-direction:column">'+
-      '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--bdr);flex-shrink:0">'+
-        '<button class="btn btn-gh" style="padding:6px 12px;font-size:12px" ontouchstart="closeImpManage();event.preventDefault()" onclick="closeImpManage()">✕ বন্ধ</button>'+
-        '<div style="font-size:14px;font-weight:800;color:var(--bl);flex:1">⚙️ Manage Contacts</div>'+
-      '</div>'+
-      '<div id="imp-mgr-inner" style="overflow-y:auto;padding:14px 14px 24px;flex:1">'+
-        '<div style="text-align:center;padding:24px;color:var(--mt2)">লোড হচ্ছে...</div>'+
-      '</div>'+
-    '</div>';
-  bg.addEventListener('click', function(e){ if(e.target===bg) closeImpManage(); });
-  document.body.appendChild(bg);
-  _renderImpManage();
-}
-
-function closeImpManage() {
-  var bg = document.getElementById('imp-mgr-bg');
-  if (bg) document.body.removeChild(bg);
-  _impEditId = null;
-  _impDelConfirmId = null;
-}
-
-function _renderImpManage() {
-  var el = document.getElementById('imp-mgr-inner'); if (!el) return;
-  var h = '';
-
-  // Add form
-  h += '<div class="card" style="margin-bottom:12px;border-left:3px solid var(--bl)">';
-  h += '<div style="font-size:11px;font-weight:700;color:var(--bl);letter-spacing:.5px;margin-bottom:10px;text-transform:uppercase">➕ নতুন কন্টাক্ট</div>';
+  // ── Add form ─────────────────────────────────────────
+  h += '<div class="ct">➕ নতুন কন্টাক্ট যোগ করুন</div>';
+  h += '<div class="card" style="margin-bottom:12px">';
   h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
   h += '<div class="fg"><label class="fl">নাম *</label><input type="text" id="ic-name" placeholder="যেমন: মিলন ভাই" maxlength="80"></div>';
   h += '<div class="fg"><label class="fl">পদবি / ভূমিকা</label><input type="text" id="ic-role" placeholder="DSR, Supplier…" maxlength="60"></div>';
@@ -844,16 +772,25 @@ function _renderImpManage() {
   h += '<button class="btn btn-bl btn-w" style="margin-top:10px" ontouchstart="impAdd();event.preventDefault()" onclick="impAdd()">➕ যোগ করুন</button>';
   h += '</div>';
 
-  // Contact list with edit / 2-step delete
-  h += '<div style="font-size:11px;font-weight:700;color:var(--mt);letter-spacing:.4px;margin-bottom:8px;text-transform:uppercase">তালিকা <span style="font-weight:400;color:var(--mt2)">('+_impContacts.length+'টি)</span></div>';
+  // ── Contact list ─────────────────────────────────────
+  h += '<div class="ct">📞 কন্টাক্ট তালিকা <span style="font-size:11px;font-weight:400;color:var(--mt2)">('+_impContacts.length+'টি এন্ট্রি)</span></div>';
 
   if (!_impContacts.length) {
-    h += '<div class="card" style="text-align:center;padding:22px;color:var(--mt2)"><div style="font-size:28px;margin-bottom:6px">📭</div>কোনো কন্টাক্ট নেই</div>';
+    h += '<div class="card" style="text-align:center;padding:28px;color:var(--mt2)"><div style="font-size:36px;margin-bottom:8px">📭</div>এখনো কোনো কন্টাক্ট যোগ করা হয়নি</div>';
   } else {
+    h += '<div class="card" style="padding:0;overflow:hidden">';
+    // Header row
+    var hdrCls = canEdit ? 'ic-tbl-hdr' : 'ic-tbl-hdr no-act';
+    h += '<div class="'+hdrCls+'">';
+    h += '<span>নাম</span><span>পদবি</span><span>ফোন নম্বর</span><span>বিশেষ নোট</span>';
+    if (canEdit) h += '<span style="text-align:center">অ্যাকশন</span>';
+    h += '</div>';
+
     _impContacts.forEach(function(c) {
       if (_impEditId === c.id) {
-        h += '<div class="ic-edit-block" style="border-radius:10px;margin-bottom:8px">';
-        h += '<div style="font-size:12px;font-weight:700;margin-bottom:8px">✏️ সম্পাদনা</div>';
+        // ── Inline edit block ────────────────────────────
+        h += '<div class="ic-edit-block">';
+        h += '<div class="ct" style="font-size:12px;margin-bottom:8px">✏️ এন্ট্রি সম্পাদনা করুন</div>';
         h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">';
         h += '<div class="fg"><label class="fl">নাম *</label><input type="text" id="ie-name" value="'+esc(c.name)+'" maxlength="80"></div>';
         h += '<div class="fg"><label class="fl">পদবি</label><input type="text" id="ie-role" value="'+esc(c.role)+'" maxlength="60"></div>';
@@ -863,28 +800,27 @@ function _renderImpManage() {
         h += '<div class="fg"><label class="fl">নোট</label><input type="text" id="ie-note" value="'+esc(c.note)+'" maxlength="120"></div>';
         h += '</div>';
         h += '<div style="display:flex;gap:7px;margin-top:9px">';
-        h += '<button class="btn btn-bl" style="flex:1;font-size:12px" ontouchstart="impSaveEdit(\''+c.id+'\');event.preventDefault()" onclick="impSaveEdit(\''+c.id+'\')">✅ সেভ</button>';
-        h += '<button class="btn btn-gh" style="flex:1;font-size:12px" ontouchstart="_impEditId=null;_renderImpManage();event.preventDefault()" onclick="_impEditId=null;_renderImpManage()">❌ বাতিল</button>';
+        h += '<button class="btn btn-bl" style="flex:1;font-size:12px" ontouchstart="impSaveEdit(\''+c.id+'\');event.preventDefault()" onclick="impSaveEdit(\''+c.id+'\')">✅ সেভ করুন</button>';
+        h += '<button class="btn btn-gh" style="flex:1;font-size:12px" ontouchstart="_impEditId=null;renderImpNumbers();event.preventDefault()" onclick="_impEditId=null;renderImpNumbers()">❌ বাতিল</button>';
         h += '</div></div>';
       } else {
-        var isDel = (_impDelConfirmId === c.id);
-        h += '<div class="card" style="margin-bottom:8px;padding:11px 13px;display:flex;align-items:center;gap:10px">';
-        h += '<div style="width:36px;height:36px;border-radius:50%;background:'+_impAvatarColor(c.name)+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0">'+(c.name?c.name.trim()[0].toUpperCase():'?')+'</div>';
-        h += '<div style="flex:1;min-width:0">';
-        h += '<div style="font-size:13px;font-weight:700;color:var(--txt)">'+esc(c.name)+'</div>';
-        if (c.role) h += '<span class="ic-role-pill" style="margin-top:2px;display:inline-block">'+esc(c.role)+'</span>';
-        h += '</div>';
-        h += '<div style="display:flex;gap:5px;flex-shrink:0">';
-        h += '<button class="btn" style="background:var(--am);color:#fff;padding:5px 9px;font-size:11px" ontouchstart="impEdit(\''+c.id+'\');event.preventDefault()" onclick="impEdit(\''+c.id+'\')">✏️</button>';
-        if (isDel) {
-          h += '<button class="btn" style="background:var(--re);color:#fff;padding:5px 10px;font-size:11px;font-weight:700" ontouchstart="impDelConfirmed(\''+c.id+'\');event.preventDefault()" onclick="impDelConfirmed(\''+c.id+'\')">⚠️ নিশ্চিত?</button>';
-          h += '<button class="btn btn-gh" style="padding:5px 8px;font-size:12px" ontouchstart="_impDelConfirmId=null;_renderImpManage();event.preventDefault()" onclick="_impDelConfirmId=null;_renderImpManage()">✕</button>';
-        } else {
-          h += '<button class="btn" style="background:#ffebee;color:var(--re);padding:5px 9px;font-size:11px;border:1px solid #ffcdd2" ontouchstart="impDelAsk(\''+c.id+'\');event.preventDefault()" onclick="impDelAsk(\''+c.id+'\')">🗑</button>';
+        // ── Normal read-only row ─────────────────────────
+        var rowCls = canEdit ? 'ic-row' : 'ic-row no-act';
+        h += '<div class="'+rowCls+'">';
+        h += '<div class="ic-name">'+esc(c.name)+'</div>';
+        h += '<div>'+(c.role ? '<span class="ic-role-pill">'+esc(c.role)+'</span>' : '<span style="color:var(--mt2);font-size:11px">—</span>')+'</div>';
+        h += '<div>'+(c.phone ? '<a class="ic-phone-lnk" href="tel:'+esc(c.phone)+'">📞 '+esc(c.phone)+'</a>' : '<span style="color:var(--mt2);font-size:11px">—</span>')+'</div>';
+        h += '<div class="ic-note-txt">'+(c.note ? esc(c.note) : '<span style="color:var(--mt2)">—</span>')+'</div>';
+        if (canEdit) {
+          h += '<div class="ic-act-cell" style="display:flex;gap:5px;justify-content:center">';
+          h += '<button class="btn" style="background:var(--am);color:#fff;padding:5px 9px;font-size:11px" ontouchstart="impEdit(\''+c.id+'\');event.preventDefault()" onclick="impEdit(\''+c.id+'\')">✏️</button>';
+          h += '<button class="btn" style="background:var(--re);color:#fff;padding:5px 9px;font-size:11px" ontouchstart="impDel(\''+c.id+'\',\''+esc(c.name)+'\');event.preventDefault()" onclick="impDel(\''+c.id+'\',\''+esc(c.name)+'\')">🗑</button>';
+          h += '</div>';
         }
-        h += '</div></div>';
+        h += '</div>';
       }
     });
+    h += '</div>'; // close .card
   }
 
   el.innerHTML = h;
@@ -901,17 +837,12 @@ async function impAdd() {
   hideOvl();
   if (!r || !r.ok) return toast((r&&r.error)||'যোগ ব্যর্থ');
   toast('✅ কন্টাক্ট যোগ হয়েছে');
-  var res = await apiGet('/api/expenses?action=contacts-list');
-  _impContacts = (res && res.ok) ? (res.contacts || []) : _impContacts;
-  _impEditId = null; _impDelConfirmId = null;
-  renderImpNumbers();
-  _renderImpManage();
+  loadImpNumbers();
 }
 
 function impEdit(id) {
   _impEditId = id;
-  _impDelConfirmId = null;
-  _renderImpManage();
+  renderImpNumbers();
   setTimeout(function() { var f=document.getElementById('ie-name'); if(f) f.focus(); }, 60);
 }
 
@@ -926,31 +857,17 @@ async function impSaveEdit(id) {
   hideOvl();
   if (!r || !r.ok) return toast((r&&r.error)||'সেভ ব্যর্থ');
   toast('✅ আপডেট হয়েছে');
-  var res = await apiGet('/api/expenses?action=contacts-list');
-  _impContacts = (res && res.ok) ? (res.contacts || []) : _impContacts;
-  _impEditId = null; _impDelConfirmId = null;
-  renderImpNumbers();
-  _renderImpManage();
+  loadImpNumbers();
 }
 
-function impDelAsk(id) {
-  _impDelConfirmId = id;
-  _impEditId = null;
-  _renderImpManage();
-}
-
-async function impDelConfirmed(id) {
-  _impDelConfirmId = null;
+async function impDel(id, name) {
+  if (!confirm('"'+name+'" মুছে ফেলবেন?')) return;
   showOvl('মুছছে...');
   var r = await apiDel('/api/expenses?action=contacts-del', { id });
   hideOvl();
   if (!r || !r.ok) return toast((r&&r.error)||'মুছতে ব্যর্থ');
   toast('🗑 মুছে গেছে');
-  var res = await apiGet('/api/expenses?action=contacts-list');
-  _impContacts = (res && res.ok) ? (res.contacts || []) : _impContacts;
-  _impEditId = null;
-  renderImpNumbers();
-  _renderImpManage();
+  loadImpNumbers();
 }
 
 // ════════════════════════════════════════════════════
