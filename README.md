@@ -1,5 +1,5 @@
 # AXIION Stock Management — Miron Electronics
-### Version 14
+### Version beta v1
 
 A mobile-first stock & sales management web app built with **Vercel serverless functions** + **Supabase** (PostgreSQL).
 
