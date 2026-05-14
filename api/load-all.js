@@ -1,4 +1,4 @@
-const { supabase, cors, mapProduct, mapSR, mapTx, calcStock } = require('./_lib/db');
+const { supabase, cors, mapProduct, mapSR, mapTx, calcStock, safeErr } = require('./_lib/db');
 
 module.exports = async (req, res) => {
   cors(res);
@@ -17,6 +17,6 @@ module.exports = async (req, res) => {
     }));
     res.json({ ok: true, products, srs, stockMap: calcStock(allTx) });
   } catch (e) {
-    res.json({ ok: false, error: e.message });
+    res.json({ ok: false, error: safeErr(e) });
   }
 };

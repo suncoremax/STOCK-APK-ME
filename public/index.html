@@ -2277,14 +2277,14 @@ function buildProdForm() {
     +'</select></div>'
     +'</div></div>'
     +'<div class="g2">'
-    +'<div class="fg"><label class="fl">ক্রয় মূল্য (৳)</label><input id="pf-bp" type="number" value="'+(p?p.purchasePrice:'')+'" min="0" placeholder="0"></div>'
-    +'<div class="fg"><label class="fl">বিক্রয় মূল্য (৳)</label><input id="pf-sp" type="number" value="'+(p?p.sellingPrice:'')+'" min="0" placeholder="0"></div>'
+    +'<div class="fg"><label class="fl">ক্রয় মূল্য (৳)</label><input id="pf-bp" type="number" value="'+(p?p.purchasePrice:'')+'" min="0" step="0.001" placeholder="0"></div>'
+    +'<div class="fg"><label class="fl">বিক্রয় মূল্য (৳)</label><input id="pf-sp" type="number" value="'+(p?p.sellingPrice:'')+'" min="0" step="0.001" placeholder="0"></div>'
     +'</div>'
     +'<div class="ib" style="margin-bottom:8px">🎁 অফার সিস্টেম</div>'
     +'<div class="g3">'
     +'<div class="fg"><label class="fl" id="pf-bcr-lbl">প্রতি কত '+(p?p.unitType||'কেস':'কেস')+'</label><input id="pf-bcr" type="number" value="'+(p?p.bonusCasesReq:1)+'" min="1"></div>'
     +'<div class="fg"><label class="fl">ফ্রি পিস (বোতল)</label><input id="pf-bfu" type="number" value="'+(p?p.bonusFreeUnits:0)+'" min="0" placeholder="0"></div>'
-    +'<div class="fg"><label class="fl">ফ্রি টাকা (৳)</label><input id="pf-bfm" type="number" value="'+(p?p.bonusFreeMoney:0)+'" min="0" placeholder="0"></div>'
+    +'<div class="fg"><label class="fl">ফ্রি টাকা (৳)</label><input id="pf-bfm" type="number" value="'+(p?p.bonusFreeMoney:0)+'" min="0" step="0.001" placeholder="0"></div>'
     +'</div>'
     +'<div class="fg"><label class="fl">⚠️ লো স্টক অ্যালার্ট (পিস)</label><input id="pf-lsa" type="number" value="'+(p?p.lowStockAlert:0)+'" min="0" placeholder="0 = বন্ধ"></div>'
     +'<div style="display:flex;gap:7px;margin-top:10px">'
@@ -2394,10 +2394,10 @@ function buildPayForm() {
     +'<div class="fg"><label class="fl">DSR/SO *</label><select id="pf-sr"><option value="">-- DSR/SO বাছাই করুন --</option>'+opts+'</select></div>'
     +'<div class="fg"><label class="fl">তারিখ</label><input type="date" id="pf-dt" value="'+iso(new Date())+'"></div>'
     +'<div class="g2">'
-    +'<div class="fg"><label class="fl">💵 নগদ (Cash)</label><input type="number" id="pf-cash" min="0" placeholder="০" oninput="updPayTotal()"></div>'
-    +'<div class="fg"><label class="fl">📊 কমিশন</label><input type="number" id="pf-comm" min="0" placeholder="০" oninput="updPayTotal()"></div>'
-    +'<div class="fg"><label class="fl">🏷️ ছাড় (Discount)</label><input type="number" id="pf-disc" min="0" placeholder="০" oninput="updPayTotal()"></div>'
-    +'<div class="fg"><label class="fl">⚠️ ড্যামেজ</label><input type="number" id="pf-dmg" min="0" placeholder="০" oninput="updPayTotal()"></div>'
+    +'<div class="fg"><label class="fl">💵 নগদ (Cash)</label><input type="number" id="pf-cash" min="0" step="0.001" placeholder="০" oninput="updPayTotal()"></div>'
+    +'<div class="fg"><label class="fl">📊 কমিশন</label><input type="number" id="pf-comm" min="0" step="0.001" placeholder="০" oninput="updPayTotal()"></div>'
+    +'<div class="fg"><label class="fl">🏷️ ছাড় (Discount)</label><input type="number" id="pf-disc" min="0" step="0.001" placeholder="০" oninput="updPayTotal()"></div>'
+    +'<div class="fg"><label class="fl">⚠️ ড্যামেজ</label><input type="number" id="pf-dmg" min="0" step="0.001" placeholder="০" oninput="updPayTotal()"></div>'
     +'</div>'
     +'<div id="pay-total-box" style="background:var(--bll);border-radius:7px;padding:9px 12px;margin-bottom:10px;font-weight:700;font-size:14px;color:var(--bl);display:flex;justify-content:space-between"><span>মোট পেমেন্ট</span><span id="pay-total-val">৳০</span></div>'
     +'<div class="fg"><label class="fl">নোট (ঐচ্ছিক)</label><input id="pf-nt" placeholder="ঐচ্ছিক"></div>'
@@ -3615,7 +3615,7 @@ function vn(id){return Number(v(id))||0;}
 function sv(id,val){var e=document.getElementById(id);if(e)e.value=val;}
 function num(x){return Number(x)||0;}
 function fn(n){return Math.round(Number(n)||0);}
-function fm(n){return Math.round(Number(n)||0).toLocaleString('en-IN');}
+function fm(n){var v=Number(n)||0;return v.toLocaleString('en-IN',{minimumFractionDigits:3,maximumFractionDigits:3});}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function iso(d){if(d instanceof Date){var y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+dd;}return String(d).slice(0,10);}
 function fmtBn(d){if(!d)return'';try{var p=String(d).slice(0,10).split('-');if(p.length!==3)return String(d).slice(0,10);return p[2]+'/'+p[1]+'/'+p[0];}catch(e){return String(d).slice(0,10);}}
@@ -3905,12 +3905,12 @@ function calPayModal(id) {
   }
   h += '</div>';
   h += '<div class="fg"><label class="fl">পরিশোধের পরিমাণ (৳) *</label>';
-  h += '<input type="number" id="pay-amt" min="1" max="'+remaining+'" placeholder="পরিমাণ লিখুন" style="font-size:16px;font-weight:700">';
+  h += '<input type="number" id="pay-amt" min="0.001" step="0.001" max="'+remaining+'" placeholder="পরিমাণ লিখুন" style="font-size:16px;font-weight:700">';
   h += '<div style="font-size:11px;color:var(--mt);margin-top:3px">সর্বোচ্চ অবশিষ্ট: ৳'+fm(remaining)+'</div></div>';
   h += '<div style="display:flex;gap:6px;margin-bottom:12px">';
-  h += '<button class="btn btn-sm btn-gh" onclick="document.getElementById(\'pay-amt\').value='+Math.round(remaining/4)+'">২৫%</button>';
-  h += '<button class="btn btn-sm btn-gh" onclick="document.getElementById(\'pay-amt\').value='+Math.round(remaining/2)+'">৫০%</button>';
-  h += '<button class="btn btn-sm btn-gh" onclick="document.getElementById(\'pay-amt\').value='+Math.round(remaining*3/4)+'">৭৫%</button>';
+  h += '<button class="btn btn-sm btn-gh" onclick="document.getElementById(\'pay-amt\').value='+Number((remaining/4).toFixed(3))+'">২৫%</button>';
+  h += '<button class="btn btn-sm btn-gh" onclick="document.getElementById(\'pay-amt\').value='+Number((remaining/2).toFixed(3))+'">৫০%</button>';
+  h += '<button class="btn btn-sm btn-gh" onclick="document.getElementById(\'pay-amt\').value='+Number((remaining*3/4).toFixed(3))+'">৭৫%</button>';
   h += '<button class="btn btn-sm" style="background:var(--grl);color:var(--gr)" onclick="document.getElementById(\'pay-amt\').value='+remaining+'">সম্পূর্ণ</button>';
   h += '</div>';
   h += '<div class="fg"><label class="fl">🔐 Owner পাসওয়ার্ড *</label>';

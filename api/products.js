@@ -1,4 +1,4 @@
-const { supabase, cors, num, now_, mapProduct } = require('./_lib/db');
+const { supabase, cors, num, now_, mapProduct, str, safeErr } = require('./_lib/db');
 
 module.exports = async (req, res) => {
   cors(res);
@@ -13,13 +13,16 @@ module.exports = async (req, res) => {
 
     if (req.method === 'POST') {
       const d = req.body;
+      if (!d || !String(d.name || '').trim()) return res.json({ ok: false, error: 'পণ্যের নাম আবশ্যক' });
+      const pp = num(d.purchasePrice), sp = num(d.sellingPrice);
+      if (pp < 0 || sp < 0) return res.json({ ok: false, error: 'মূল্য ঋণাত্মক হতে পারবে না' });
       const { data, error } = await supabase.from('products').insert({
-        name:             String(d.name || '').trim(),
-        sku:              String(d.sku  || '').trim().toUpperCase(),
+        name:             str(d.name, 200),
+        sku:              str(d.sku, 50).toUpperCase(),
         case_size:        num(d.caseSize) || 1,
-        unit_type:        String(d.unitType || 'কেস'),
-        purchase_price:   num(d.purchasePrice),
-        selling_price:    num(d.sellingPrice),
+        unit_type:        str(d.unitType || 'কেস', 50),
+        purchase_price:   pp,
+        selling_price:    sp,
         bonus_free_units: num(d.bonusFreeUnits),
         bonus_cases_req:  num(d.bonusCasesReq) || 1,
         bonus_free_money: num(d.bonusFreeMoney),
@@ -34,18 +37,21 @@ module.exports = async (req, res) => {
     if (req.method === 'PUT') {
       const d = req.body;
       if (!d.id) return res.json({ ok: false, error: 'id প্রয়োজন' });
+      if (!String(d.name || '').trim()) return res.json({ ok: false, error: 'পণ্যের নাম আবশ্যক' });
+      const pp = num(d.purchasePrice), sp = num(d.sellingPrice);
+      if (pp < 0 || sp < 0) return res.json({ ok: false, error: 'মূল্য ঋণাত্মক হতে পারবে না' });
       let thumb = String(d.thumb || '');
       if (!thumb) {
         const { data: existing } = await supabase.from('products').select('thumb').eq('id', d.id).single();
         if (existing) thumb = existing.thumb || '';
       }
       const { error } = await supabase.from('products').update({
-        name:             String(d.name || '').trim(),
-        sku:              String(d.sku  || '').trim().toUpperCase(),
+        name:             str(d.name, 200),
+        sku:              str(d.sku, 50).toUpperCase(),
         case_size:        num(d.caseSize) || 1,
-        unit_type:        String(d.unitType || 'কেস'),
-        purchase_price:   num(d.purchasePrice),
-        selling_price:    num(d.sellingPrice),
+        unit_type:        str(d.unitType || 'কেস', 50),
+        purchase_price:   pp,
+        selling_price:    sp,
         bonus_free_units: num(d.bonusFreeUnits),
         bonus_cases_req:  num(d.bonusCasesReq) || 1,
         bonus_free_money: num(d.bonusFreeMoney),
@@ -66,6 +72,6 @@ module.exports = async (req, res) => {
 
     res.status(405).json({ ok: false, error: 'Method not allowed' });
   } catch (e) {
-    res.json({ ok: false, error: e.message });
+    res.json({ ok: false, error: safeErr(e) });
   }
 };

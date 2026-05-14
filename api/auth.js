@@ -1,4 +1,7 @@
-const { supabase, cors } = require('./_lib/db');
+const { supabase, cors, safeErr } = require('./_lib/db');
+
+const PIN_RE = /^\d{5}$/;
+function validPin(p) { return typeof p === 'string' && PIN_RE.test(p.trim()); }
 
 module.exports = async (req, res) => {
   cors(res);
@@ -9,11 +12,13 @@ module.exports = async (req, res) => {
     if (req.method === 'POST') {
       const { password } = req.body || {};
       if (!password) return res.json({ ok: false, error: 'পাসওয়ার্ড দিন' });
+      const pin = String(password).trim();
+      if (!validPin(pin)) return res.json({ ok: false, error: 'ভুল পাসওয়ার্ড' });
 
       const { data, error } = await supabase
         .from('user_passwords')
         .select('*')
-        .eq('password', String(password).trim())
+        .eq('password', pin)
         .limit(1);
 
       if (error) throw error;
@@ -44,6 +49,7 @@ module.exports = async (req, res) => {
 
       // User changing own password (requires old password)
       if (d.action === 'change') {
+        if (!validPin(String(d.newPass || ''))) return res.json({ ok: false, error: 'নতুন PIN অবশ্যই ৫ সংখ্যার হতে হবে' });
         const { data: existing } = await supabase
           .from('user_passwords')
           .select('id')
@@ -62,6 +68,7 @@ module.exports = async (req, res) => {
 
       // Owner setting any user's password (no old pass needed)
       if (d.action === 'owner_set') {
+        if (!validPin(String(d.newPass || ''))) return res.json({ ok: false, error: 'PIN অবশ্যই ৫ সংখ্যার হতে হবে' });
         const { error } = await supabase
           .from('user_passwords')
           .update({ password: String(d.newPass).trim() })
@@ -121,6 +128,6 @@ module.exports = async (req, res) => {
 
     res.status(405).json({ ok: false, error: 'Method not allowed' });
   } catch (e) {
-    res.json({ ok: false, error: e.message });
+    res.json({ ok: false, error: safeErr(e) });
   }
 };

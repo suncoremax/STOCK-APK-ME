@@ -11,10 +11,19 @@ function cors(res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
-function num(v) { return Number(v) || 0; }
+function num(v) { const n = Number(v); return isFinite(n) ? n : 0; }
 function ds(v)  { if (!v) return ''; return String(v).slice(0, 10); }
 function today(){ return new Date().toISOString().slice(0, 10); }
 function now_() { return new Date().toISOString(); }
+function str(v, max = 255) { return String(v || '').trim().slice(0, max); }
+function safeErr(e) {
+  if (process.env.NODE_ENV === 'development') return e.message;
+  const msg = String(e.message || '');
+  if (msg.includes('duplicate') || msg.includes('unique')) return 'এই তথ্য ইতিমধ্যে আছে';
+  if (msg.includes('foreign key') || msg.includes('violates')) return 'সম্পর্কিত তথ্য পাওয়া যায়নি';
+  if (msg.includes('not found') || msg.includes('PGRST116')) return 'তথ্য পাওয়া যায়নি';
+  return 'সার্ভার সমস্যা হয়েছে, আবার চেষ্টা করুন';
+}
 
 function mapProduct(r) {
   return {
@@ -215,7 +224,7 @@ async function computeBonusSummary() {
 }
 
 module.exports = {
-  supabase, cors, num, ds, today, now_,
+  supabase, cors, num, ds, today, now_, str, safeErr,
   mapProduct, mapSR, mapTx, mapDmg, mapBonus, mapPayment,
   mapExpCat, mapExpRecord, mapDue, mapChatMsg,
   calcStock, computeBonusSummary

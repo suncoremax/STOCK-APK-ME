@@ -1,4 +1,4 @@
-const { supabase, cors, num, now_, mapPayment } = require('./_lib/db');
+const { supabase, cors, num, now_, mapPayment, safeErr } = require('./_lib/db');
 const { randomUUID } = require('crypto');
 
 module.exports = async (req, res) => {
@@ -121,7 +121,7 @@ module.exports = async (req, res) => {
 
     res.status(405).json({ ok: false, error: 'Method not allowed' });
   } catch (e) {
-    res.json({ ok: false, error: e.message });
+    res.json({ ok: false, error: safeErr(e) });
   }
 };
 

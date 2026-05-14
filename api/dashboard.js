@@ -1,7 +1,7 @@
 const {
   supabase, cors, num, ds,
   mapProduct, mapSR, mapTx, mapPayment, mapDmg, mapBonus,
-  calcStock
+  calcStock, safeErr
 } = require('./_lib/db');
 
 module.exports = async (req, res) => {
@@ -359,6 +359,6 @@ module.exports = async (req, res) => {
     });
 
   } catch (e) {
-    res.json({ ok: false, error: e.message });
+    res.json({ ok: false, error: safeErr(e) });
   }
 };

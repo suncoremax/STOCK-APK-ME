@@ -1,5 +1,8 @@
-const { supabase, cors, num, now_, mapTx } = require('./_lib/db');
+const { supabase, cors, num, now_, mapTx, safeErr } = require('./_lib/db');
 const { randomUUID } = require('crypto');
+
+const VALID_TYPES = new Set(['buy','give','return','damage','point_sale','point_damage_return']);
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 module.exports = async (req, res) => {
   cors(res);
@@ -9,6 +12,10 @@ module.exports = async (req, res) => {
     // POST — add transaction (one or many items share same txId)
     if (req.method === 'POST') {
       const d = req.body;
+      if (!VALID_TYPES.has(d.type)) return res.json({ ok: false, error: 'অবৈধ লেনদেনের ধরন' });
+      if (!d.date || !DATE_RE.test(d.date)) return res.json({ ok: false, error: 'বৈধ তারিখ দিন (YYYY-MM-DD)' });
+      if (!Array.isArray(d.items) || !d.items.length) return res.json({ ok: false, error: 'কমপক্ষে একটি আইটেম দিন' });
+      if (d.items.length > 100) return res.json({ ok: false, error: 'একসাথে সর্বোচ্চ ১০০টি আইটেম' });
       const txId = randomUUID();
       const ts   = now_();
 
@@ -104,6 +111,6 @@ module.exports = async (req, res) => {
 
     res.status(405).json({ ok: false, error: 'Method not allowed' });
   } catch (e) {
-    res.json({ ok: false, error: e.message });
+    res.json({ ok: false, error: safeErr(e) });
   }
 };

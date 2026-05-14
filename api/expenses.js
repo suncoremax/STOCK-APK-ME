@@ -1,4 +1,4 @@
-const { supabase, cors, num, ds, now_, today, mapExpCat, mapExpRecord, mapDue, mapChatMsg } = require('./_lib/db');
+const { supabase, cors, num, ds, now_, today, mapExpCat, mapExpRecord, mapDue, mapChatMsg, safeErr } = require('./_lib/db');
 
 module.exports = async (req, res) => {
   cors(res);
@@ -225,5 +225,5 @@ module.exports = async (req, res) => {
     }
 
     res.status(400).json({ ok: false, error: 'অজানা action: ' + action });
-  } catch (e) { res.json({ ok: false, error: e.message }); }
+  } catch (e) { res.json({ ok: false, error: safeErr(e) }); }
 };

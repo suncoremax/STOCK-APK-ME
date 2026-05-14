@@ -1,4 +1,4 @@
-const { supabase, cors, now_, today, computeBonusSummary } = require('./_lib/db');
+const { supabase, cors, now_, today, computeBonusSummary, safeErr } = require('./_lib/db');
 
 module.exports = async (req, res) => {
   cors(res);
@@ -42,6 +42,6 @@ module.exports = async (req, res) => {
 
     res.status(405).json({ ok: false, error: 'Method not allowed' });
   } catch (e) {
-    res.json({ ok: false, error: e.message });
+    res.json({ ok: false, error: safeErr(e) });
   }
 };
