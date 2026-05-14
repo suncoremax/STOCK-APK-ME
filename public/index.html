@@ -3828,58 +3828,111 @@ function nextCalMonth() {
   return yr+'-'+String(mo).padStart(2,'0');
 }
 
+// ── Level 1: show people list for a date ─────────────────────
 function calDayClick(dateStr) {
   var dayDues = CAL.dues.filter(function(d){return d.dueDate===dateStr;});
   var canEdit  = S.role==='owner'||S.role==='manager';
   var modal = document.createElement('div');
+  modal.id = 'cal-day-modal';
   modal.className = 'due-modal-bg';
   modal.onclick = function(e){if(e.target===modal)document.body.removeChild(modal);};
   var h = '<div class="due-modal">';
   h += '<div class="due-modal-title">📅 '+fmtBn(dateStr)+'</div>';
   if (!dayDues.length) {
     h += '<div style="text-align:center;color:var(--mt2);padding:20px 0">এই দিনে কোনো বাকি নেই</div>';
-    if (canEdit) h += '<button class="btn btn-bl btn-w" onclick="document.body.removeChild(document.querySelector(\'.due-modal-bg\'));calAddModal(\''+dateStr+'\')">➕ এই দিনে বাকি যোগ করুন</button>';
+    if (canEdit) h += '<button class="btn btn-bl btn-w" onclick="document.body.removeChild(document.getElementById(\'cal-day-modal\'));calAddModal(\''+dateStr+'\')">➕ এই দিনে বাকি যোগ করুন</button>';
   } else {
+    // Build per-person summary
+    var pMap = {};
     dayDues.forEach(function(d){
-      var isPending = d.status==='pending';
-      var isPartial = d.status==='partial';
-      var isCleared = d.status==='cleared';
-      var paid      = num(d.paidAmount);
-      var total     = num(d.amount);
-      var remaining = total - paid;
-      var pct       = total > 0 ? Math.round(paid/total*100) : 0;
-      var statusCls = isPending?'status-pending':(isPartial?'status-partial':'status-cleared');
-      var statusLbl = isPending?'🔴 বকেয়া':(isPartial?'🟠 আংশিক পরিশোধ':'🟢 পরিশোধিত');
-
-      h += '<div class="due-item">';
-      h += '<div style="flex:1;min-width:0"><div style="font-weight:700">'+(d.dsrName||'—')+'</div>';
-      if (d.shopName) h += '<div style="font-size:11px;color:#673AB7;font-weight:600">🏪 '+esc(d.shopName)+'</div>';
-      h += '<div style="font-size:11px;color:var(--mt)">'+(d.note||'')+'</div>';
-      h += '<div class="'+statusCls+'">'+statusLbl+'</div>';
-      if (isPartial) {
-        h += '<div class="pay-prog-bar"><div class="pay-prog-fill" style="width:'+pct+'%"></div></div>';
-        h += '<div style="font-size:10px;color:var(--mt)">পরিশোধ: ৳'+fm(paid)+' · বাকি: ৳'+fm(remaining)+'</div>';
-      }
+      var pKey = d.dsrName||'—';
+      if (!pMap[pKey]) pMap[pKey] = { name: pKey, clientType: d.clientType||'dsr', dues:[], total:0, remaining:0 };
+      pMap[pKey].dues.push(d);
+      pMap[pKey].total     += num(d.amount);
+      pMap[pKey].remaining += Math.max(0, num(d.amount)-num(d.paidAmount));
+    });
+    var people = Object.values(pMap);
+    h += '<div style="font-size:11px;color:var(--mt2);margin-bottom:10px;text-align:center">নামে ট্যাপ করুন বিস্তারিত দেখতে</div>';
+    people.forEach(function(p){
+      var allCleared = p.dues.every(function(d){return d.status==='cleared';});
+      var hasPartial = p.dues.some(function(d){return d.status==='partial';});
+      var dotColor   = allCleared ? 'var(--gr)' : (hasPartial ? '#FF9800' : 'var(--re)');
+      var remTxt     = p.remaining > 0 ? '৳'+fm(p.remaining)+' বাকি' : '✅ পরিশোধিত';
+      var badge = p.clientType==='custom'
+        ? '<span style="font-size:10px;background:#EDE7F6;color:#673AB7;border-radius:4px;padding:1px 5px;margin-left:4px">কাস্টম</span>'
+        : '<span style="font-size:10px;background:#E3F2FD;color:var(--bl);border-radius:4px;padding:1px 5px;margin-left:4px">DSR</span>';
+      var safeKey = encodeURIComponent(p.name);
+      h += '<div class="due-item" style="cursor:pointer;border-radius:10px;background:#F8F9FA;margin-bottom:6px;padding:10px 12px;align-items:center" onclick="calPersonDayDetail(\''+dateStr+'\',decodeURIComponent(\''+safeKey+'\'))">';
+      h += '<div style="flex:1;min-width:0">';
+      h += '<div style="font-weight:700;font-size:14px">'+esc(p.name)+badge+'</div>';
+      h += '<div style="font-size:11px;color:var(--mt);margin-top:2px">'+p.dues.length+'টি লেনদেন · মোট: ৳'+fm(p.total)+'</div>';
       h += '</div>';
-      h += '<div style="text-align:right;margin-left:8px">';
-      h += '<div style="font-size:15px;font-weight:700;color:'+(isCleared?'var(--gr)':(isPartial?'#FF9800':'var(--re))'))+'">৳'+fm(total)+'</div>';
-      if (canEdit) {
-        if (!isCleared) {
-          h += '<button class="btn btn-sm" style="background:var(--grl);color:var(--gr);margin-top:4px" onclick="document.body.removeChild(document.querySelector(\'.due-modal-bg\'));calPayModal(\''+d.id+'\')">💳 পরিশোধ</button>';
-        } else {
-          h += '<button class="btn btn-sm btn-gh" style="margin-top:4px" onclick="document.body.removeChild(document.querySelector(\'.due-modal-bg\'));calUndo(\''+d.id+'\')">↩️ পূর্বাবস্থা</button>';
-        }
-      }
+      h += '<div style="text-align:right;margin-left:10px">';
+      h += '<div style="font-size:14px;font-weight:700;color:'+dotColor+'">'+remTxt+'</div>';
+      h += '<div style="font-size:11px;color:var(--mt2);margin-top:2px">বিস্তারিত ▶</div>';
       h += '</div></div>';
     });
-    if (canEdit) h += '<div style="margin-top:10px"><button class="btn btn-bl btn-w" onclick="document.body.removeChild(document.querySelector(\'.due-modal-bg\'));calAddModal(\''+dateStr+'\')">➕ আরো যোগ করুন</button></div>';
+    if (canEdit) h += '<div style="margin-top:8px"><button class="btn btn-bl btn-w" onclick="document.body.removeChild(document.getElementById(\'cal-day-modal\'));calAddModal(\''+dateStr+'\')">➕ আরো যোগ করুন</button></div>';
   }
-  h += '<div style="margin-top:14px"><button class="btn btn-gh btn-w" onclick="document.body.removeChild(document.querySelector(\'.due-modal-bg\'))">বন্ধ করুন</button></div>';
+  h += '<div style="margin-top:12px"><button class="btn btn-gh btn-w" onclick="document.body.removeChild(document.getElementById(\'cal-day-modal\'))">বন্ধ করুন</button></div>';
   h += '</div>';
   modal.innerHTML = h;
   document.body.appendChild(modal);
 }
 
+// ── Level 2: show one person's transactions for a date ────────
+function calPersonDayDetail(dateStr, personName) {
+  var dayDues = CAL.dues.filter(function(d){return d.dueDate===dateStr && (d.dsrName||'—')===personName;});
+  var canEdit  = S.role==='owner'||S.role==='manager';
+  // close level-1 modal
+  var prev = document.getElementById('cal-day-modal');
+  if (prev) document.body.removeChild(prev);
+  var modal = document.createElement('div');
+  modal.id = 'cal-person-modal';
+  modal.className = 'due-modal-bg';
+  modal.onclick = function(e){if(e.target===modal)document.body.removeChild(modal);};
+  var h = '<div class="due-modal">';
+  h += '<div class="due-modal-title" style="font-size:14px">'+esc(personName)+'<div style="font-size:11px;color:var(--mt);font-weight:400;margin-top:2px">📅 '+fmtBn(dateStr)+'</div></div>';
+  dayDues.forEach(function(d){
+    var isPending = d.status==='pending';
+    var isPartial = d.status==='partial';
+    var isCleared = d.status==='cleared';
+    var paid      = num(d.paidAmount);
+    var total     = num(d.amount);
+    var remaining = total - paid;
+    var pct       = total > 0 ? Math.round(paid/total*100) : 0;
+    var statusCls = isPending?'status-pending':(isPartial?'status-partial':'status-cleared');
+    var statusLbl = isPending?'🔴 বকেয়া':(isPartial?'🟠 আংশিক পরিশোধ':'🟢 পরিশোধিত');
+    h += '<div class="due-item" style="margin-bottom:8px;border:1px solid #EEF2FF;border-radius:10px;padding:10px">';
+    h += '<div style="flex:1;min-width:0">';
+    if (d.shopName) h += '<div style="font-size:11px;color:#673AB7;font-weight:600;margin-bottom:3px">🏪 '+esc(d.shopName)+'</div>';
+    if (d.note) h += '<div style="font-size:11px;color:var(--mt);margin-bottom:3px">📝 '+esc(d.note)+'</div>';
+    h += '<div class="'+statusCls+'">'+statusLbl+'</div>';
+    if (isPartial) {
+      h += '<div class="pay-prog-bar" style="margin-top:5px"><div class="pay-prog-fill" style="width:'+pct+'%"></div></div>';
+      h += '<div style="font-size:10px;color:var(--mt);margin-top:2px">পরিশোধ: ৳'+fm(paid)+' · বাকি: ৳'+fm(remaining)+'</div>';
+    }
+    h += '</div>';
+    h += '<div style="text-align:right;margin-left:8px;min-width:80px">';
+    h += '<div style="font-size:16px;font-weight:700;color:'+(isCleared?'var(--gr)':(isPartial?'#FF9800':'var(--re)'))+'">\৳'+fm(total)+'</div>';
+    if (canEdit) {
+      if (!isCleared) {
+        h += '<button class="btn btn-sm" style="background:var(--grl);color:var(--gr);margin-top:4px" onclick="document.body.removeChild(document.getElementById(\'cal-person-modal\'));calPayModal(\''+d.id+'\')">💳 পরিশোধ</button>';
+      } else {
+        h += '<button class="btn btn-sm btn-gh" style="margin-top:4px" onclick="document.body.removeChild(document.getElementById(\'cal-person-modal\'));calUndo(\''+d.id+'\')">↩️ পূর্বাবস্থা</button>';
+      }
+    }
+    h += '</div></div>';
+  });
+  var safeDate = encodeURIComponent(dateStr);
+  h += '<div style="margin-top:12px;display:flex;gap:8px">';
+  h += '<button class="btn btn-gh" style="flex:1" onclick="document.body.removeChild(document.getElementById(\'cal-person-modal\'));calDayClick(decodeURIComponent(\''+safeDate+'\'))">◀ ফিরে যান</button>';
+  h += '<button class="btn btn-gh" onclick="document.body.removeChild(document.getElementById(\'cal-person-modal\'))">বন্ধ</button>';
+  h += '</div>';
+  h += '</div>';
+  modal.innerHTML = h;
+  document.body.appendChild(modal);
+}
 function calPayModal(id) {
   var due = CAL.dues.find(function(d){return d.id===id;});
   if (!due) return;
@@ -3930,7 +3983,12 @@ async function calDoPayment(id, maxRemaining) {
   if (!payAmt || payAmt <= 0) return toast('পরিমাণ দিন');
   if (payAmt > maxRemaining + 0.01) return toast('পরিমাণ অবশিষ্ট বাকির বেশি হতে পারবে না');
   if (!pin) return toast('Owner পাসওয়ার্ড দিন');
-  if (pin !== PINS.owner) return toast('❌ পাসওয়ার্ড ভুল');
+  // Validate owner password via API (works even after password change)
+  showOvl('পাসওয়ার্ড যাচাই হচ্ছে...');
+  var authR = await apiPost('/api/auth', { password: pin });
+  hideOvl();
+  if (!authR || !authR.ok) return toast('❌ পাসওয়ার্ড ভুল');
+  if (authR.role !== 'owner') return toast('❌ শুধুমাত্র Owner পাসওয়ার্ড গ্রহণযোগ্য');
   var modal = document.querySelector('.due-modal-bg');
   if (modal) document.body.removeChild(modal);
   showOvl('পরিশোধ হচ্ছে...');
