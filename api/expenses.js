@@ -178,6 +178,52 @@ module.exports = async (req, res) => {
       return res.json({ ok: true });
     }
 
+    // ── Important Contacts ──────────────────────────────
+    if (req.method === 'GET' && action === 'contacts-list') {
+      const { data, error } = await supabase.from('important_contacts').select('*').order('created_at');
+      if (error) throw error;
+      return res.json({ ok: true, contacts: (data||[]).map(r => ({
+        id: String(r.id), name: r.name||'', role: r.role||'',
+        phone: r.phone_number||'', note: r.special_note||'',
+        createdBy: r.created_by||''
+      }))});
+    }
+    if (req.method === 'POST' && action === 'contacts-add') {
+      const b = req.body||{};
+      const name = String(b.name||'').trim();
+      if (!name) return res.json({ ok: false, error: 'নাম প্রয়োজন' });
+      const { error } = await supabase.from('important_contacts').insert({
+        name,
+        role:         String(b.role ||'').trim(),
+        phone_number: String(b.phone||'').trim(),
+        special_note: String(b.note ||'').trim(),
+        created_by:   String(b.createdBy||''),
+        created_at:   now_()
+      });
+      if (error) throw error;
+      return res.json({ ok: true });
+    }
+    if (req.method === 'POST' && action === 'contacts-edit') {
+      const b = req.body||{};
+      const id = b.id;
+      if (!id) return res.json({ ok: false, error: 'ID প্রয়োজন' });
+      const { error } = await supabase.from('important_contacts').update({
+        name:         String(b.name ||'').trim(),
+        role:         String(b.role ||'').trim(),
+        phone_number: String(b.phone||'').trim(),
+        special_note: String(b.note ||'').trim()
+      }).eq('id', id);
+      if (error) throw error;
+      return res.json({ ok: true });
+    }
+    if (req.method === 'DELETE' && action === 'contacts-del') {
+      const id = req.body?.id || req.query?.id;
+      if (!id) return res.json({ ok: false, error: 'ID প্রয়োজন' });
+      const { error } = await supabase.from('important_contacts').delete().eq('id', id);
+      if (error) throw error;
+      return res.json({ ok: true });
+    }
+
     res.status(400).json({ ok: false, error: 'অজানা action: ' + action });
   } catch (e) { res.json({ ok: false, error: e.message }); }
 };

@@ -345,6 +345,25 @@ tr:hover td{background:#F5F7FF}
 .notice-track{flex:1;overflow:hidden;position:relative;height:20px}
 .notice-scroll{position:absolute;top:0;left:0;display:inline-block;white-space:nowrap;font-size:12px;font-weight:700;color:#E65100;line-height:20px;will-change:transform}
 .notice-short{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;font-weight:700;color:#E65100;line-height:20px}
+/* ── Important Contacts ── */
+.ic-tbl-hdr{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,2fr) 72px;background:#E8EAF6;padding:7px 12px;font-size:10px;font-weight:700;color:var(--mt);border-bottom:1px solid var(--bdr);gap:6px}
+.ic-tbl-hdr.no-act{grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,2fr)}
+.ic-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,2fr) 72px;padding:10px 12px;border-bottom:1px solid #EEF2FF;gap:6px;align-items:center;transition:.12s}
+.ic-row:last-child{border-bottom:none}
+.ic-row.no-act{grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,2fr)}
+.ic-row:hover{background:#F5F7FF}
+.ic-name{font-size:13px;font-weight:700;color:var(--txt);word-break:break-word}
+.ic-role-pill{display:inline-block;background:#E3F2FD;color:var(--bl);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.ic-phone-lnk{color:var(--bl);font-weight:600;font-size:12px;text-decoration:none;word-break:break-all}
+.ic-note-txt{font-size:11px;color:var(--mt);word-break:break-word;line-height:1.4}
+.ic-edit-block{background:#FFFDE7;padding:11px 12px;border-bottom:1px solid #FFE082}
+@media(max-width:460px){
+  .ic-tbl-hdr,.ic-tbl-hdr.no-act{grid-template-columns:1fr 1fr;gap:4px}
+  .ic-tbl-hdr span:nth-child(3),.ic-tbl-hdr span:nth-child(4),.ic-tbl-hdr span:nth-child(5){display:none}
+  .ic-row,.ic-row.no-act{grid-template-columns:1fr 1fr;gap:4px;row-gap:3px}
+  .ic-row .ic-note-txt{grid-column:1/-1;font-size:11px}
+  .ic-row .ic-act-cell{grid-column:2;grid-row:1;justify-self:end}
+}
 </style>
 </head>
 <body>
@@ -566,7 +585,7 @@ function renderExtraTab(sub) {
   h += '<button class="xf-sbt '+(_extraTab==='pwmgr'?'active':'')+'" ontouchstart="renderExtraTab(\'pwmgr\');event.preventDefault()" onclick="renderExtraTab(\'pwmgr\')">🔑 Password Manager</button>';
   h += '<button class="xf-sbt '+(_extraTab==='ownerapproval'?'active':'')+'" ontouchstart="renderExtraTab(\'ownerapproval\');event.preventDefault()" onclick="renderExtraTab(\'ownerapproval\')">👑 Owner Approvals</button>';
   h += '<button class="xf-sbt '+(_extraTab==='groupchat'?'active':'')+'" ontouchstart=\"renderExtraTab(\'groupchat\');event.preventDefault()\" onclick=\"renderExtraTab(\'groupchat\')\">💬 Group Chat</button>';
-  h += '<button class="xf-sbt '+(_extraTab==='impnumbers'?'active':'')+'" disabled>📞 Important Numbers</button>';
+  h += '<button class="xf-sbt '+(_extraTab==='impnumbers'?'active':'')+'" ontouchstart="renderExtraTab(\'impnumbers\');event.preventDefault()" onclick="renderExtraTab(\'impnumbers\')">📞 Important Numbers</button>';
   h += '<button class="xf-sbt '+(_extraTab==='noticepanel'?'active':'')+'" ontouchstart="renderExtraTab(\'noticepanel\');event.preventDefault()" onclick="renderExtraTab(\'noticepanel\')">📋 Notice Panel</button>';
   h += '</div>';
 
@@ -609,7 +628,8 @@ function renderExtraTab(sub) {
     h += '</div>';
     setTimeout(gcLoadAndInit, 0);
   } else if (_extraTab === 'impnumbers') {
-    h += _xfComingSoon('📞', 'Important Numbers', 'জরুরি ও গুরুত্বপূর্ণ নম্বরগুলো এক জায়গায়।\nএই ফিচারটি শীঘ্রই আসছে।');
+    h += '<div id="imp-wrap"><div style="text-align:center;padding:20px;color:var(--mt2)">লোড হচ্ছে...</div></div>';
+    setTimeout(loadImpNumbers, 0);
   } else if (_extraTab === 'noticepanel') {
     h += '<div id="np-wrap"><div style="text-align:center;padding:20px;color:var(--mt2)">লোড হচ্ছে...</div></div>';
     setTimeout(loadNoticePanel, 0);
@@ -698,6 +718,139 @@ async function noticeClear() {
   S.activeNotice = null;
   toast('🗑 নোটিশ মুছে গেছে');
   loadNoticePanel();
+}
+
+// ════════════════════════════════════════════════════
+//  IMPORTANT NUMBERS — Contact Directory
+// ════════════════════════════════════════════════════
+var _impContacts = [];
+var _impEditId   = null;
+
+async function loadImpNumbers() {
+  var el = document.getElementById('imp-wrap'); if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--mt2)">লোড হচ্ছে...</div>';
+  var r = await apiGet('/api/expenses?action=contacts-list');
+  if (!r || !r.ok) { el.innerHTML = '<div style="padding:16px;color:var(--re)">লোড ব্যর্থ</div>'; return; }
+  _impContacts = r.contacts || [];
+  _impEditId   = null;
+  renderImpNumbers();
+}
+
+function renderImpNumbers() {
+  var el = document.getElementById('imp-wrap'); if (!el) return;
+  var canEdit = (S.role === 'owner' || S.role === 'manager');
+  var h = '';
+
+  // ── Add form ─────────────────────────────────────────
+  h += '<div class="ct">➕ নতুন কন্টাক্ট যোগ করুন</div>';
+  h += '<div class="card" style="margin-bottom:12px">';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  h += '<div class="fg"><label class="fl">নাম *</label><input type="text" id="ic-name" placeholder="যেমন: মিলন ভাই" maxlength="80"></div>';
+  h += '<div class="fg"><label class="fl">পদবি / ভূমিকা</label><input type="text" id="ic-role" placeholder="DSR, Supplier…" maxlength="60"></div>';
+  h += '</div>';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
+  h += '<div class="fg"><label class="fl">ফোন নম্বর</label><input type="tel" id="ic-phone" placeholder="01XXXXXXXXX" maxlength="20"></div>';
+  h += '<div class="fg"><label class="fl">বিশেষ নোট</label><input type="text" id="ic-note" placeholder="যেকোনো তথ্য" maxlength="120"></div>';
+  h += '</div>';
+  h += '<button class="btn btn-bl btn-w" style="margin-top:10px" ontouchstart="impAdd();event.preventDefault()" onclick="impAdd()">➕ যোগ করুন</button>';
+  h += '</div>';
+
+  // ── Contact list ─────────────────────────────────────
+  h += '<div class="ct">📞 কন্টাক্ট তালিকা <span style="font-size:11px;font-weight:400;color:var(--mt2)">('+_impContacts.length+'টি এন্ট্রি)</span></div>';
+
+  if (!_impContacts.length) {
+    h += '<div class="card" style="text-align:center;padding:28px;color:var(--mt2)"><div style="font-size:36px;margin-bottom:8px">📭</div>এখনো কোনো কন্টাক্ট যোগ করা হয়নি</div>';
+  } else {
+    h += '<div class="card" style="padding:0;overflow:hidden">';
+    // Header row
+    var hdrCls = canEdit ? 'ic-tbl-hdr' : 'ic-tbl-hdr no-act';
+    h += '<div class="'+hdrCls+'">';
+    h += '<span>নাম</span><span>পদবি</span><span>ফোন নম্বর</span><span>বিশেষ নোট</span>';
+    if (canEdit) h += '<span style="text-align:center">অ্যাকশন</span>';
+    h += '</div>';
+
+    _impContacts.forEach(function(c) {
+      if (_impEditId === c.id) {
+        // ── Inline edit block ────────────────────────────
+        h += '<div class="ic-edit-block">';
+        h += '<div class="ct" style="font-size:12px;margin-bottom:8px">✏️ এন্ট্রি সম্পাদনা করুন</div>';
+        h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">';
+        h += '<div class="fg"><label class="fl">নাম *</label><input type="text" id="ie-name" value="'+esc(c.name)+'" maxlength="80"></div>';
+        h += '<div class="fg"><label class="fl">পদবি</label><input type="text" id="ie-role" value="'+esc(c.role)+'" maxlength="60"></div>';
+        h += '</div>';
+        h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px">';
+        h += '<div class="fg"><label class="fl">ফোন</label><input type="tel" id="ie-phone" value="'+esc(c.phone)+'" maxlength="20"></div>';
+        h += '<div class="fg"><label class="fl">নোট</label><input type="text" id="ie-note" value="'+esc(c.note)+'" maxlength="120"></div>';
+        h += '</div>';
+        h += '<div style="display:flex;gap:7px;margin-top:9px">';
+        h += '<button class="btn btn-bl" style="flex:1;font-size:12px" ontouchstart="impSaveEdit(\''+c.id+'\');event.preventDefault()" onclick="impSaveEdit(\''+c.id+'\')">✅ সেভ করুন</button>';
+        h += '<button class="btn btn-gh" style="flex:1;font-size:12px" ontouchstart="_impEditId=null;renderImpNumbers();event.preventDefault()" onclick="_impEditId=null;renderImpNumbers()">❌ বাতিল</button>';
+        h += '</div></div>';
+      } else {
+        // ── Normal read-only row ─────────────────────────
+        var rowCls = canEdit ? 'ic-row' : 'ic-row no-act';
+        h += '<div class="'+rowCls+'">';
+        h += '<div class="ic-name">'+esc(c.name)+'</div>';
+        h += '<div>'+(c.role ? '<span class="ic-role-pill">'+esc(c.role)+'</span>' : '<span style="color:var(--mt2);font-size:11px">—</span>')+'</div>';
+        h += '<div>'+(c.phone ? '<a class="ic-phone-lnk" href="tel:'+esc(c.phone)+'">📞 '+esc(c.phone)+'</a>' : '<span style="color:var(--mt2);font-size:11px">—</span>')+'</div>';
+        h += '<div class="ic-note-txt">'+(c.note ? esc(c.note) : '<span style="color:var(--mt2)">—</span>')+'</div>';
+        if (canEdit) {
+          h += '<div class="ic-act-cell" style="display:flex;gap:5px;justify-content:center">';
+          h += '<button class="btn" style="background:var(--am);color:#fff;padding:5px 9px;font-size:11px" ontouchstart="impEdit(\''+c.id+'\');event.preventDefault()" onclick="impEdit(\''+c.id+'\')">✏️</button>';
+          h += '<button class="btn" style="background:var(--re);color:#fff;padding:5px 9px;font-size:11px" ontouchstart="impDel(\''+c.id+'\',\''+esc(c.name)+'\');event.preventDefault()" onclick="impDel(\''+c.id+'\',\''+esc(c.name)+'\')">🗑</button>';
+          h += '</div>';
+        }
+        h += '</div>';
+      }
+    });
+    h += '</div>'; // close .card
+  }
+
+  el.innerHTML = h;
+}
+
+async function impAdd() {
+  var name  = ((document.getElementById('ic-name') ||{}).value||'').trim();
+  var role  = ((document.getElementById('ic-role') ||{}).value||'').trim();
+  var phone = ((document.getElementById('ic-phone')||{}).value||'').trim();
+  var note  = ((document.getElementById('ic-note') ||{}).value||'').trim();
+  if (!name) return toast('নাম লিখুন');
+  showOvl('যোগ হচ্ছে...');
+  var r = await apiPost('/api/expenses?action=contacts-add', { name, role, phone, note, createdBy: S.userId });
+  hideOvl();
+  if (!r || !r.ok) return toast((r&&r.error)||'যোগ ব্যর্থ');
+  toast('✅ কন্টাক্ট যোগ হয়েছে');
+  loadImpNumbers();
+}
+
+function impEdit(id) {
+  _impEditId = id;
+  renderImpNumbers();
+  setTimeout(function() { var f=document.getElementById('ie-name'); if(f) f.focus(); }, 60);
+}
+
+async function impSaveEdit(id) {
+  var name  = ((document.getElementById('ie-name') ||{}).value||'').trim();
+  var role  = ((document.getElementById('ie-role') ||{}).value||'').trim();
+  var phone = ((document.getElementById('ie-phone')||{}).value||'').trim();
+  var note  = ((document.getElementById('ie-note') ||{}).value||'').trim();
+  if (!name) return toast('নাম লিখুন');
+  showOvl('সেভ হচ্ছে...');
+  var r = await apiPost('/api/expenses?action=contacts-edit', { id, name, role, phone, note });
+  hideOvl();
+  if (!r || !r.ok) return toast((r&&r.error)||'সেভ ব্যর্থ');
+  toast('✅ আপডেট হয়েছে');
+  loadImpNumbers();
+}
+
+async function impDel(id, name) {
+  if (!confirm('"'+name+'" মুছে ফেলবেন?')) return;
+  showOvl('মুছছে...');
+  var r = await apiDel('/api/expenses?action=contacts-del', { id });
+  hideOvl();
+  if (!r || !r.ok) return toast((r&&r.error)||'মুছতে ব্যর্থ');
+  toast('🗑 মুছে গেছে');
+  loadImpNumbers();
 }
 
 // ════════════════════════════════════════════════════

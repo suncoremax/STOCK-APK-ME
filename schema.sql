@@ -284,3 +284,25 @@ CREATE TABLE notices (
 ALTER TABLE notices ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "srv_notices"       ON notices FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "anon_deny_notices" ON notices FOR ALL TO anon USING (false);
+
+-- ══════════════════════════════════════════════════════════════════
+--  V18: Important Contacts Directory
+-- ══════════════════════════════════════════════════════════════════
+
+DROP TABLE IF EXISTS important_contacts CASCADE;
+
+CREATE TABLE important_contacts (
+  id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  name         TEXT        NOT NULL DEFAULT '',
+  role         TEXT        NOT NULL DEFAULT '',
+  phone_number TEXT        NOT NULL DEFAULT '',
+  special_note TEXT        NOT NULL DEFAULT '',
+  created_by   TEXT        NOT NULL DEFAULT '',
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_ic_created_at ON important_contacts(created_at);
+
+ALTER TABLE important_contacts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "srv_important_contacts"       ON important_contacts FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "anon_deny_important_contacts" ON important_contacts FOR ALL TO anon          USING (false);
