@@ -20,7 +20,21 @@
   --bg:#EEF2FF;--card:#fff;--bdr:#C5CAE9;
   --txt:#0D1B2A;--mt:#546E7A;--mt2:#90A4AE;
   --rad:12px;--shad:0 2px 8px rgba(13,71,161,.1);
+  --inp-bg:#fff;--nav-bg:#fff;--seg-bg:#E8EAF6;
+  --hdr1:#0D2137;--hdr2:#0D47A1;
 }
+body.dark{
+  --bg:#0F1923;--card:#1A2535;--bdr:#2A3A50;
+  --txt:#E8EDF5;--mt:#8CA0B8;--mt2:#506070;
+  --shad:0 2px 8px rgba(0,0,0,.35);
+  --bll:#0D2547;--grl:#0D2515;--rel:#2A1015;
+  --aml:#2A1800;--tel:#0A2020;--pul:#1E0D30;--gol:#2A1F00;
+  --inp-bg:#1A2535;--nav-bg:#111D2B;--seg-bg:#1E2D40;
+  --hdr1:#060E18;--hdr2:#0A2D6E;
+}
+/* Theme toggle button */
+.theme-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:6px;padding:4px 9px;font-size:14px;cursor:pointer;line-height:1;font-family:inherit;transition:.15s}
+.theme-btn:active{transform:scale(.93)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden}
 body{font-family:'Hind Siliguri',sans-serif;background:var(--bg);color:var(--txt);font-size:14px;display:flex;flex-direction:column}
@@ -41,13 +55,13 @@ body{font-family:'Hind Siliguri',sans-serif;background:var(--bg);color:var(--txt
 /* LAYOUT */
 #app{flex:1;display:flex;flex-direction:column;overflow:hidden;opacity:0;transition:opacity .3s}
 #app.show{opacity:1}
-.hdr{background:linear-gradient(90deg,#0D2137,#0D47A1);color:#fff;padding:11px 14px 9px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+.hdr{background:linear-gradient(90deg,var(--hdr1),var(--hdr2));color:#fff;padding:11px 14px 9px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
 .hdr h1{font-size:15px;font-weight:700;line-height:1}
 .hdr-s{font-size:10px;opacity:.75;margin-top:2px}
 .pages{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .page{padding:12px 12px 72px;max-width:640px;margin:0 auto;display:none}
 .page.active{display:block}
-.nav{flex-shrink:0;background:#fff;border-top:1px solid var(--bdr);display:flex;height:56px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.nav{flex-shrink:0;background:var(--nav-bg);border-top:1px solid var(--bdr);display:flex;height:56px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .nav::-webkit-scrollbar{display:none}
 .nb{flex:1;min-width:44px;max-width:14.28%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:none;border:none;font-size:7px;color:var(--mt2);cursor:pointer;padding:3px 1px;font-family:'Hind Siliguri',sans-serif;transition:.15s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 .nb.active{color:var(--bl)}.ni{font-size:18px;line-height:1}
@@ -56,14 +70,14 @@ body{font-family:'Hind Siliguri',sans-serif;background:var(--bg);color:var(--txt
 .ct{font-size:13px;font-weight:700;color:var(--bl);margin-bottom:10px}
 
 .mets{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-.met{background:#fff;border-radius:10px;padding:11px;text-align:center;border:1px solid var(--bdr);box-shadow:var(--shad)}
+.met{background:var(--card);border-radius:10px;padding:11px;text-align:center;border:1px solid var(--bdr);box-shadow:var(--shad)}
 .mv{font-size:18px;font-weight:700;margin:3px 0 1px;line-height:1}
 .ml{font-size:10px;color:var(--mt2)}
 .met-b{border-top:3px solid var(--bl)}.met-g{border-top:3px solid var(--gr)}
 .met-r{border-top:3px solid var(--re)}.met-a{border-top:3px solid var(--am)}
 
 .fl{display:block;font-size:11px;color:var(--mt);margin-bottom:3px;font-weight:600}
-input,select,textarea{width:100%;border:1.5px solid var(--bdr);border-radius:7px;padding:8px 11px;font-size:13px;font-family:'Hind Siliguri',sans-serif;color:var(--txt);background:#fff;outline:none;transition:.12s}
+input,select,textarea{width:100%;border:1.5px solid var(--bdr);border-radius:7px;padding:8px 11px;font-size:13px;font-family:'Hind Siliguri',sans-serif;color:var(--txt);background:var(--inp-bg);outline:none;transition:.12s}
 input:focus,select:focus{border-color:var(--bl);box-shadow:0 0 0 2px rgba(13,71,161,.1)}
 .fg{margin-bottom:10px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -77,12 +91,12 @@ input:focus,select:focus{border-color:var(--bl);box-shadow:0 0 0 2px rgba(13,71,
 .btn-gh{background:var(--bg);color:var(--txt);border:1.5px solid var(--bdr)}
 .btn-w{width:100%}.btn-sm{padding:6px 10px;font-size:11px;border-radius:6px}
 
-.seg{display:flex;background:#E8EAF6;border-radius:8px;padding:3px;gap:2px;margin-bottom:12px;flex-wrap:wrap}
+.seg{display:flex;background:var(--seg-bg);border-radius:8px;padding:3px;gap:2px;margin-bottom:12px;flex-wrap:wrap}
 .sbt{flex:1;min-width:50px;padding:6px 4px;border-radius:6px;border:none;background:none;font-size:11px;font-weight:700;color:var(--mt);cursor:pointer;font-family:'Hind Siliguri',sans-serif;transition:.12s;text-align:center}
-.sbt.active{background:#fff;color:var(--bl);box-shadow:0 1px 3px rgba(13,71,161,.15)}
+.sbt.active{background:var(--card);color:var(--bl);box-shadow:0 1px 3px rgba(13,71,161,.15)}
 
 .tbar{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap}
-.tb{flex:1;min-width:70px;padding:8px 4px;border-radius:7px;border:2px solid var(--bdr);background:#fff;font-size:11px;font-weight:700;cursor:pointer;color:var(--mt);transition:.12s;text-align:center;font-family:'Hind Siliguri',sans-serif}
+.tb{flex:1;min-width:70px;padding:8px 4px;border-radius:7px;border:2px solid var(--bdr);background:var(--card);font-size:11px;font-weight:700;cursor:pointer;color:var(--mt);transition:.12s;text-align:center;font-family:'Hind Siliguri',sans-serif}
 .tb.tg{border-color:var(--bl);background:var(--bll);color:var(--bl)}
 .tb.tr_{border-color:var(--te);background:var(--tel);color:var(--te)}
 .tb.td_{border-color:var(--re);background:var(--rel);color:var(--re)}
@@ -264,7 +278,7 @@ tr:hover td{background:#F5F7FF}
 /* Due Calendar */
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px}
 .cal-day-hdr{text-align:center;font-size:10px;font-weight:700;color:var(--mt);padding:4px 0}
-.cal-cell{min-height:52px;border-radius:8px;border:1.5px solid var(--bdr);background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:3px 2px;position:relative;transition:.12s}
+.cal-cell{min-height:52px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:3px 2px;position:relative;transition:.12s}
 .cal-cell:active{transform:scale(.95)}
 .cal-cell.empty{background:transparent;border-color:transparent;cursor:default}
 .cal-cell.today-cell{border-color:var(--bl);background:var(--bll)}
@@ -286,7 +300,7 @@ tr:hover td{background:#F5F7FF}
 .due-item{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;border-bottom:1px solid #EEF2FF}
 .due-item:last-child{border-bottom:none}
 .due-modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:5000;display:flex;align-items:flex-end;justify-content:center}
-.due-modal{background:#fff;border-radius:16px 16px 0 0;padding:20px 16px 30px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto}
+.due-modal{background:var(--card);border-radius:16px 16px 0 0;padding:20px 16px 30px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto}
 .due-modal-title{font-size:16px;font-weight:700;margin-bottom:14px;color:var(--bl)}
 .status-pending{color:var(--re);font-weight:700;font-size:11px}
 .status-cleared{color:var(--gr);font-weight:700;font-size:11px}
@@ -295,7 +309,7 @@ tr:hover td{background:#F5F7FF}
 .pay-prog-fill{height:100%;border-radius:3px;background:var(--gr);transition:.3s}
 
 /* ── Extra Features Tab ── */
-.xf-subnav{display:flex;background:#E8EAF6;border-radius:8px;padding:3px;gap:2px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.xf-subnav{display:flex;background:var(--seg-bg);border-radius:8px;padding:3px;gap:2px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .xf-subnav::-webkit-scrollbar{display:none}
 .xf-sbt{flex:0 0 auto;padding:7px 11px;border-radius:6px;border:none;background:none;font-size:11px;font-weight:700;color:var(--mt);cursor:pointer;font-family:'Hind Siliguri',sans-serif;transition:.12s;text-align:center;white-space:nowrap}
 .xf-sbt.active{background:#fff;color:var(--bl);box-shadow:0 1px 3px rgba(13,71,161,.15)}
@@ -318,7 +332,7 @@ tr:hover td{background:#F5F7FF}
 .gc-msg.other{align-self:flex-start;align-items:flex-start}
 .gc-bubble{padding:8px 11px;border-radius:14px;font-size:13px;line-height:1.5;font-family:'Hind Siliguri',sans-serif}
 .gc-msg.mine .gc-bubble{background:var(--bl);color:#fff;border-bottom-right-radius:3px}
-.gc-msg.other .gc-bubble{background:#fff;color:var(--txt);border:1px solid var(--bdr);border-bottom-left-radius:3px}
+.gc-msg.other .gc-bubble{background:var(--card);color:var(--txt);border:1px solid var(--bdr);border-bottom-left-radius:3px}
 .gc-meta{font-size:10px;color:var(--mt);margin-bottom:3px;display:flex;align-items:center;gap:5px}
 .gc-role-badge{display:inline-block;padding:1px 6px;border-radius:9px;font-size:9px;font-weight:700;letter-spacing:.2px}
 .gc-role-owner{background:#FFF8E1;color:#E65100;border:1px solid #FFCC80}
@@ -328,7 +342,7 @@ tr:hover td{background:#F5F7FF}
 .gc-time{font-size:9.5px;color:var(--mt2);margin-top:2px}
 .gc-msg.mine .gc-time{align-self:flex-end}
 .gc-input-row{display:flex;gap:8px;align-items:flex-end;padding:8px 0 2px;border-top:1px solid var(--bdr);background:var(--bg)}
-.gc-input-row textarea{flex:1;border:1.5px solid var(--bdr);border-radius:10px;padding:9px 11px;font-size:13px;font-family:'Hind Siliguri',sans-serif;resize:none;max-height:90px;min-height:42px;outline:none;background:#fff;color:var(--txt);line-height:1.4}
+.gc-input-row textarea{flex:1;border:1.5px solid var(--bdr);border-radius:10px;padding:9px 11px;font-size:13px;font-family:'Hind Siliguri',sans-serif;resize:none;max-height:90px;min-height:42px;outline:none;background:var(--inp-bg);color:var(--txt);line-height:1.4}
 .gc-input-row textarea:focus{border-color:var(--bl)}
 .gc-send-btn{flex-shrink:0;width:44px;height:44px;border-radius:50%;background:var(--bl);color:#fff;border:none;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
 .gc-send-btn:active{background:var(--bl2);transform:scale(.93)}
@@ -388,6 +402,7 @@ tr:hover td{background:#F5F7FF}
       <div style="font-size:10px;color:rgba(255,255,255,.7)" id="hdr-date"></div>
       <div id="role-badge" style="background:rgba(255,215,0,.15);border:1px solid rgba(255,215,0,.4);color:#FFD700;border-radius:10px;padding:2px 8px;font-size:10px;font-weight:700">👑 Owner</div>
       <button ontouchstart="refreshApp();event.preventDefault()" onclick="refreshApp()" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:6px;padding:4px 9px;font-size:15px;cursor:pointer;line-height:1;font-family:inherit">🔄</button>
+      <button id="theme-btn" class="theme-btn" ontouchstart="toggleTheme();event.preventDefault()" onclick="toggleTheme()">🌙</button>
       <button ontouchstart="logout();event.preventDefault()" onclick="logout()" style="background:rgba(255,82,82,.2);border:1px solid rgba(255,82,82,.35);color:#fff;border-radius:6px;padding:4px 9px;font-size:13px;cursor:pointer;font-family:inherit">🔒</button>
     </div>
   </div>
@@ -401,6 +416,7 @@ tr:hover td{background:#F5F7FF}
     <div class="page" id="pg-cal"></div>
     <div class="page" id="pg-extra"></div>
     <div class="page" id="pg-chat"></div>
+    <div class="page" id="pg-numbers"></div>
   </div>
   <nav class="nav">
     <button class="nb active" ontouchstart="gTab('dash');event.preventDefault()" onclick="gTab('dash')" id="nb-dash"><span class="ni">🏠</span>হোম</button>
@@ -412,6 +428,7 @@ tr:hover td{background:#F5F7FF}
     <button class="nb" ontouchstart="gTab('cal');event.preventDefault()" onclick="gTab('cal')" id="nb-cal"><span class="ni">📅</span>ক্যালেন্ডার</button>
     <button class="nb" ontouchstart="gTab('extra');event.preventDefault()" onclick="gTab('extra')" id="nb-extra" style="display:none"><span class="ni">✨</span>এক্সট্রা</button>
     <button class="nb" ontouchstart="gTab('chat');event.preventDefault()" onclick="gTab('chat')" id="nb-chat" style="display:none"><span class="ni">💬</span>গ্রুপ চ্যাট</button>
+    <button class="nb" ontouchstart="gTab('numbers');event.preventDefault()" onclick="gTab('numbers')" id="nb-numbers" style="display:none"><span class="ni">📞</span>নম্বর</button>
   </nav>
 </div>
 
@@ -540,11 +557,11 @@ function applyRole() {
   // Nav visibility per role
   var show = {
     owner:   ['dash','prod','sr','tx','rep','exp','cal','extra'],
-    manager: ['dash','prod','sr','tx','exp','cal','chat'],
-    so:      ['dash','prod','chat'],
-    dsr:     ['dash','chat']
+    manager: ['dash','prod','sr','tx','exp','cal','chat','numbers'],
+    so:      ['dash','prod','chat','numbers'],
+    dsr:     ['dash','chat','numbers']
   }[r] || ['dash'];
-  ['dash','prod','sr','tx','rep','exp','cal','extra','chat'].forEach(function(t) {
+  ['dash','prod','sr','tx','rep','exp','cal','extra','chat','numbers'].forEach(function(t) {
     var el = document.getElementById('nb-'+t);
     if (el) el.style.display = show.indexOf(t) >= 0 ? '' : 'none';
   });
@@ -676,7 +693,7 @@ function _renderNoticePanel(notice) {
   h += '<div class="ct" style="margin-bottom:8px">'+(hasActive?'🔄 নোটিশ পরিবর্তন করুন':'✏️ নতুন নোটিশ লিখুন')+'</div>';
   h += '<div class="card" style="margin-bottom:12px">';
   h += '<div class="fg"><label class="fl">নোটিশ টেক্সট</label>';
-  h += '<textarea id="np-input" rows="3" placeholder="এখানে নোটিশ লিখুন..." maxlength="200" style="width:100%;border:1.5px solid var(--bdr);border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;resize:none;outline:none;color:var(--txt);background:#fff;line-height:1.5" oninput="document.getElementById(\'np-count\').textContent=this.value.length"></textarea>';
+  h += '<textarea id="np-input" rows="3" placeholder="এখানে নোটিশ লিখুন..." maxlength="200" style="width:100%;border:1.5px solid var(--bdr);border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;resize:none;outline:none;color:var(--txt);background:var(--inp-bg);line-height:1.5" oninput="document.getElementById(\'np-count\').textContent=this.value.length"></textarea>';
   h += '<div style="text-align:right;font-size:10px;color:var(--mt2)"><span id="np-count">0</span>/200</div>';
   h += '</div>';
   h += '<button class="btn btn-bl btn-w" style="margin-top:8px" ontouchstart="noticePublish();event.preventDefault()" onclick="noticePublish()">📢 '+(hasActive?'পরিবর্তন করে প্রকাশ করুন':'প্রকাশ করুন')+'</button>';
@@ -1244,7 +1261,7 @@ async function loadAll() {
 }
 
 async function refreshApp() {
-  var t = S.tab; _dashCache = null;
+  var t = S.tab; _dashCache = null; _numLoaded = false;
   showOvl('রিফ্রেশ হচ্ছে...');
   var r = await apiGet('/api/load-all');
   hideOvl();
@@ -1259,12 +1276,13 @@ async function refreshApp() {
   else if (t==='rep') renderRep();
   else if (t==='exp') loadExpSetup();
   else if (t==='cal') loadCal(CAL.month||null);
+  else if (t==='numbers') { _numLoaded=false; renderNumbersTab(); }
 }
 
 // ════════════════════════════════════════════════════
 //  NAV
 // ════════════════════════════════════════════════════
-var TABS = ['dash','prod','sr','tx','rep','exp','cal','extra','chat'];
+var TABS = ['dash','prod','sr','tx','rep','exp','cal','extra','chat','numbers'];
 function gTab(t) {
   S.tab = t;
   TABS.forEach(function(id){
@@ -1282,6 +1300,7 @@ function gTab(t) {
   if (t==='cal')   loadCal();
   if (t==='extra') renderExtraTab();
   if (t==='chat')  renderChatTab();
+  if (t==='numbers') renderNumbersTab();
 }
 
 // ════════════════════════════════════════════════════
@@ -1313,6 +1332,82 @@ function renderChatTab() {
 }
 
 // ════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════
+//  NUMBERS TAB — Important contacts read-only (manager/SO/DSR)
+// ════════════════════════════════════════════════════
+var _numContacts = [], _numLoaded = false;
+
+function renderNumbersTab() {
+  var el = document.getElementById('pg-numbers'); if (!el) return;
+  var canEdit = (S.role === 'owner' || S.role === 'manager');
+  var h = '<div class="ct">📞 গুরুত্বপূর্ণ নম্বর সমূহ</div>';
+  if (!_numLoaded) {
+    h += '<div class="card" style="text-align:center;padding:28px;color:var(--mt2)"><div style="font-size:32px;margin-bottom:8px">📡</div>লোড হচ্ছে...</div>';
+    el.innerHTML = h;
+    _loadNumbersTab();
+    return;
+  }
+  if (!_numContacts.length) {
+    h += '<div class="card" style="text-align:center;padding:28px;color:var(--mt2)"><div style="font-size:36px;margin-bottom:8px">📭</div>এখনো কোনো কন্টাক্ট যোগ করা হয়নি</div>';
+    el.innerHTML = h;
+    return;
+  }
+  h += '<div class="card" style="padding:0;overflow:hidden">';
+  _numContacts.forEach(function(c, i) {
+    var bg = i % 2 === 0 ? 'background:var(--card)' : 'background:var(--bg)';
+    h += '<div style="'+bg+';padding:13px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:12px">';
+    // Avatar circle
+    var initials = (c.name||'?').charAt(0).toUpperCase();
+    h += '<div style="width:42px;height:42px;border-radius:50%;background:var(--bll);border:2px solid var(--bl);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--bl);flex-shrink:0">'+initials+'</div>';
+    h += '<div style="flex:1;min-width:0">';
+    h += '<div style="font-weight:700;font-size:13px;color:var(--txt)">'+esc(c.name)+'</div>';
+    if (c.role) h += '<div style="font-size:11px;color:var(--mt);margin-top:1px">'+esc(c.role)+'</div>';
+    if (c.note) h += '<div style="font-size:11px;color:var(--mt2);margin-top:2px;font-style:italic">'+esc(c.note)+'</div>';
+    h += '</div>';
+    if (c.phone) {
+      h += '<a href="tel:'+esc(c.phone)+'" style="display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;background:var(--grl);border:1.5px solid var(--gr);border-radius:8px;padding:7px 10px;flex-shrink:0">';
+      h += '<span style="font-size:18px">📞</span>';
+      h += '<span style="font-size:9px;font-weight:700;color:var(--gr)">'+esc(c.phone)+'</span>';
+      h += '</a>';
+    } else {
+      h += '<div style="width:42px"></div>';
+    }
+    h += '</div>';
+  });
+  h += '</div>';
+  h += '<div style="text-align:center;font-size:10px;color:var(--mt2);padding:10px">'+_numContacts.length+'টি কন্টাক্ট'+(canEdit?' · পরিবর্তনের জন্য Extra → Important Numbers এ যান':'')+'</div>';
+  el.innerHTML = h;
+}
+
+async function _loadNumbersTab() {
+  var r;
+  try {
+    var t = new Promise(function(res){ setTimeout(function(){ res({ok:false}); }, 10000); });
+    r = await Promise.race([apiGet('/api/expenses?action=contacts-list'), t]);
+  } catch(e) { r = {ok:false}; }
+  _numContacts = (r && r.ok) ? (r.contacts || []) : [];
+  _numLoaded = true;
+  renderNumbersTab();
+}
+
+// ════════════════════════════════════════════════════
+//  DARK / LIGHT THEME
+// ════════════════════════════════════════════════════
+function toggleTheme() {
+  var dark = document.body.classList.toggle('dark');
+  localStorage.setItem('axiion_theme', dark ? 'dark' : 'light');
+  var btn = document.getElementById('theme-btn');
+  if (btn) btn.textContent = dark ? '☀️' : '🌙';
+}
+function _initTheme() {
+  if (localStorage.getItem('axiion_theme') === 'dark') {
+    document.body.classList.add('dark');
+    var btn = document.getElementById('theme-btn');
+    if (btn) btn.textContent = '☀️';
+  }
+}
+_initTheme();
+
 function loadDash(force) {
   if (S.role==='dsr') { loadDsrDash(); return; }
   if (S.role==='so')  { loadSoDash();  return; }
@@ -4079,8 +4174,17 @@ function _gcStartPolling() {
 async function gcLoadAndInit() {
   if (_gcInited) { _gcScrollBottom(); return; }
   _gcInited = true;
-  var r = await apiGet('/api/expenses?action=chat-msgs');
-  _gcMsgs = (r && r.ok) ? (r.messages||[]) : [];
+  var r;
+  try {
+    var _tout = new Promise(function(res){ setTimeout(function(){ res({ok:false,error:'timeout'}); }, 12000); });
+    r = await Promise.race([apiGet('/api/expenses?action=chat-msgs'), _tout]);
+  } catch(e) { r = {ok:false,error:e.message}; }
+  if (!r || !r.ok) {
+    var _el = document.getElementById('gc-msgs-list');
+    if (_el) _el.innerHTML = '<div class="gc-empty"><div style="font-size:32px">⚠️</div><div style="margin-top:8px;color:var(--mt)">লোড ব্যর্থ হয়েছে</div><button class="btn btn-bl" style="margin-top:12px;font-size:12px" ontouchstart="event.preventDefault();_gcInited=false;gcLoadAndInit()" onclick="_gcInited=false;gcLoadAndInit()">🔄 পুনরায় চেষ্টা করুন</button></div>';
+    return;
+  }
+  _gcMsgs = r.messages || [];
   _gcRenderMessages();
   _gcScrollBottom();
   _gcInitRealtime();

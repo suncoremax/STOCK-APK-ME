@@ -1,11 +1,16 @@
 -- ══════════════════════════════════════════════════════════════════
---  AXIION স্টক ম্যানেজমেন্ট — Supabase Schema V9
+--  AXIION স্টক ম্যানেজমেন্ট — Supabase Schema V20
 --  Miron Electronics
 --
 --  ✅ FRESH INSTALL — নতুন Supabase project এ পুরোটা paste করুন
 --  ✅ পুরানো data নেই, পুরানো table নেই — সম্পূর্ণ নতুন
 --  ✅ শেষে Owner এর PIN সেট আছে: 12345
---  ✅ V9: DSR-SO assignment (so_id), RLS data isolation
+--  ✅ V9:  DSR-SO assignment (so_id), RLS data isolation
+--  ✅ V14: Global Group Chat (group_chat_messages)
+--  ✅ V17: Notice Panel (notices)
+--  ✅ V18: Important Contacts (important_contacts)
+--  ✅ V20: UI — Dark/Light theme toggle, Numbers tab (manager/SO/DSR),
+--           Group Chat loading fix (timeout + retry)
 -- ══════════════════════════════════════════════════════════════════
 
 DROP TABLE IF EXISTS user_passwords  CASCADE;
