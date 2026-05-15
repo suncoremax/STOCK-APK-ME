@@ -643,12 +643,6 @@ function renderExtraTab(sub) {
     h += '<button class="gc-send-btn" id="gc-send-btn" ontouchstart="gcSend();event.preventDefault()" onclick="gcSend()">➤</button>';
     h += '</div>';
     h += '</div>';
-    // Reset state so fresh DOM gets messages re-rendered (same as renderChatTab does)
-    _gcInited = false;
-    if (_gcPollTimer) { clearInterval(_gcPollTimer); _gcPollTimer = null; }
-    if (_gcSubClient) { try { _gcSubClient.removeAllChannels(); } catch(e){} }
-    if (_gcChannel)   { try { _gcChannel.unsubscribe(); } catch(e){} _gcChannel = null; }
-    _gcLive = false;
     setTimeout(gcLoadAndInit, 0);
   } else if (_extraTab === 'impnumbers') {
     h += '<div id="imp-wrap"><div style="text-align:center;padding:20px;color:var(--mt2)">লোড হচ্ছে...</div></div>';
@@ -1375,7 +1369,6 @@ function renderChatTab() {
   // Reset state so it re-subscribes into the fresh DOM
   _gcInited = false;
   if (_gcPollTimer) { clearInterval(_gcPollTimer); _gcPollTimer = null; }
-  if (_gcSubClient) { try { _gcSubClient.removeAllChannels(); } catch(e){} _gcSubClient = null; }
   if (_gcChannel)   { try { _gcChannel.unsubscribe(); } catch(e){} _gcChannel = null; }
   _gcLive = false;
   setTimeout(gcLoadAndInit, 0);
@@ -4199,8 +4192,6 @@ async function _gcInitRealtime() {
       _gcStartPolling(); return;
     }
     if (typeof window.supabase === 'undefined') { _gcStartPolling(); return; }
-    // Clean up any previous client to avoid ghost WebSocket connections
-    if (_gcSubClient) { try { _gcSubClient.removeAllChannels(); } catch(e){} _gcSubClient = null; }
     _gcSubClient = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
     _gcChannel = _gcSubClient.channel('gc-global')
       .on('postgres_changes', { event:'INSERT', schema:'public', table:'group_chat_messages' },
@@ -4217,7 +4208,7 @@ async function _gcInitRealtime() {
         })
       .subscribe(function(status) {
         if (status === 'SUBSCRIBED') _gcSetLive(true);
-        else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
           _gcSetLive(false); _gcStartPolling();
         }
       });
