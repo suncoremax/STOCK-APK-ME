@@ -643,8 +643,7 @@ function renderExtraTab(sub) {
     h += '<button class="gc-send-btn" id="gc-send-btn" ontouchstart="gcSend();event.preventDefault()" onclick="gcSend()">➤</button>';
     h += '</div>';
     h += '</div>';
-    // Full state reset — same as renderChatTab — so re-entering always reloads
-    _gcReset();
+    setTimeout(gcLoadAndInit, 0);
   } else if (_extraTab === 'impnumbers') {
     h += '<div id="imp-wrap"><div style="text-align:center;padding:20px;color:var(--mt2)">লোড হচ্ছে...</div></div>';
     setTimeout(loadImpNumbers, 0);
@@ -1367,8 +1366,12 @@ function renderChatTab() {
   h += '</div>';
   h += '</div>';
   el.innerHTML = h;
-  // Full state reset so every navigation reloads cleanly
-  _gcReset();
+  // Reset state so it re-subscribes into the fresh DOM
+  _gcInited = false;
+  if (_gcPollTimer) { clearInterval(_gcPollTimer); _gcPollTimer = null; }
+  if (_gcChannel)   { try { _gcChannel.unsubscribe(); } catch(e){} _gcChannel = null; }
+  _gcLive = false;
+  setTimeout(gcLoadAndInit, 0);
 }
 
 // ════════════════════════════════════════════════════
@@ -3911,7 +3914,7 @@ function calPersonDayDetail(dateStr, personName) {
     }
     h += '</div>';
     h += '<div style="text-align:right;margin-left:8px;min-width:80px">';
-    h += '<div style="font-size:16px;font-weight:700;color:'+(isCleared?'var(--gr)':(isPartial?'#FF9800':'var(--re)'))+'">৳'+fm(total)+'</div>';
+    h += '<div style="font-size:16px;font-weight:700;color:'+(isCleared?'var(--gr)':(isPartial?'#FF9800':'var(--re)'))+'">\৳'+fm(total)+'</div>';
     if (canEdit) {
       if (!isCleared) {
         h += '<button class="btn btn-sm" style="background:var(--grl);color:var(--gr);margin-top:4px" onclick="document.body.removeChild(document.getElementById(\'cal-person-modal\'));calPayModal(\''+d.id+'\')">💳 পরিশোধ</button>';
@@ -4076,13 +4079,12 @@ async function calUndo(id) {
 //  GROUP CHAT
 // ════════════════════════════════════════════════════
 var _gcMsgs        = [];
-var _gcChannel     = null;
 var _gcSubClient   = null;
+var _gcChannel     = null;
 var _gcLive        = false;
 var _gcSending     = false;
 var _gcInited      = false;
 var _gcPollTimer   = null;
-var _gcGen         = 0;   // generation counter — cancels stale async loads
 
 var ROLE_LABELS_CHAT = { owner:'Owner', manager:'Manager', so:'SO', dsr:'DSR' };
 
@@ -4190,8 +4192,6 @@ async function _gcInitRealtime() {
       _gcStartPolling(); return;
     }
     if (typeof window.supabase === 'undefined') { _gcStartPolling(); return; }
-    // Clean up any previous client before creating a new one
-    if (_gcSubClient) { try { _gcSubClient.removeAllChannels(); } catch(e){} _gcSubClient = null; }
     _gcSubClient = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
     _gcChannel = _gcSubClient.channel('gc-global')
       .on('postgres_changes', { event:'INSERT', schema:'public', table:'group_chat_messages' },
@@ -4229,38 +4229,17 @@ function _gcStartPolling() {
   }, 4000);
 }
 
-// _gcReset: full teardown — call before every re-render of chat UI
-function _gcReset() {
-  _gcInited = false;
-  _gcMsgs   = [];
-  _gcGen++;                                              // invalidates any in-flight gcLoadAndInit
-  if (_gcPollTimer) { clearInterval(_gcPollTimer); _gcPollTimer = null; }
-  if (_gcChannel)   { try { _gcChannel.unsubscribe(); } catch(e){} _gcChannel = null; }
-  if (_gcSubClient) { try { _gcSubClient.removeAllChannels(); } catch(e){} _gcSubClient = null; }
-  _gcLive = false;
-  setTimeout(gcLoadAndInit, 0);
-}
-
 async function gcLoadAndInit() {
   if (_gcInited) { _gcScrollBottom(); return; }
   _gcInited = true;
-  var myGen = _gcGen;                                    // snapshot generation at start
   var r;
   try {
     var _tout = new Promise(function(res){ setTimeout(function(){ res({ok:false,error:'timeout'}); }, 12000); });
     r = await Promise.race([apiGet('/api/expenses?action=chat-msgs'), _tout]);
   } catch(e) { r = {ok:false,error:e.message}; }
-  if (myGen !== _gcGen) return;                          // newer reset happened — abort silently
   if (!r || !r.ok) {
-    var _errMsg = (r && r.error) ? r.error : (r && r.error === undefined && !r.ok ? 'API সাড়া দিচ্ছে না' : 'সংযোগ ব্যর্থ — নেটওয়ার্ক চেক করুন');
     var _el = document.getElementById('gc-msgs-list');
-    if (_el) _el.innerHTML = '<div class="gc-empty"><div style="font-size:32px">⚠️</div>'
-      + '<div style="margin-top:8px;color:var(--re);font-size:12px;font-weight:700">লোড ব্যর্থ</div>'
-      + '<div style="margin-top:4px;color:var(--mt);font-size:11px;padding:0 16px">' + esc(_errMsg) + '</div>'
-      + '<button class="btn btn-bl" style="margin-top:12px;font-size:12px" ontouchstart="event.preventDefault();_gcReset()" onclick="_gcReset()">🔄 আবার চেষ্টা করুন</button>'
-      + '<a href="/diag.html" style="display:block;margin-top:8px;font-size:11px;color:var(--bl)">🔍 Diagnostic চালান</a>'
-      + '</div>';
-    _gcInited = false;
+    if (_el) _el.innerHTML = '<div class="gc-empty"><div style="font-size:32px">⚠️</div><div style="margin-top:8px;color:var(--mt)">লোড ব্যর্থ হয়েছে</div><button class="btn btn-bl" style="margin-top:12px;font-size:12px" ontouchstart="event.preventDefault();_gcInited=false;gcLoadAndInit()" onclick="_gcInited=false;gcLoadAndInit()">🔄 পুনরায় চেষ্টা করুন</button></div>';
     return;
   }
   _gcMsgs = r.messages || [];
