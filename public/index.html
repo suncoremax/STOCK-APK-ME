@@ -3287,7 +3287,7 @@ function _soTodaySale() {
   var list = ((S.soDashData||{}).todayProductSales)||[];
   var h='<div class="ct">📦 আজকের মোট বিক্রয় (নিযুক্ত DSR)</div>';
   h+='<div class="card" style="padding:10px;margin-bottom:10px"><div class="ib" style="background:var(--bll);border-color:var(--bl)">'
-    +'আজ আপনার DSR-রা যে যে পণ্য বিক্রি/সরবরাহ করেছেন তার কাঁচা পিস সংখ্যা (বোনাস বাদে)।</div></div>';
+    +'আজ আপনার DSR-রা যে যে পণ্য বিক্রি/সরবরাহ করেছেন তার  পিস সংখ্যা (বোনাস বাদে)।</div></div>';
   if (!list.length) { h+='<div class="card" style="padding:20px;color:var(--mt2);text-align:center">আজ এখনো কোনো বিক্রয় হয়নি</div>'; return h; }
   h+='<div class="card" style="padding:0;overflow:hidden">';
   list.forEach(function(p){
