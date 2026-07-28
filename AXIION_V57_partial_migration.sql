@@ -1,0 +1,31 @@
+-- ════════════════════════════════════════════════════════════════
+--  AXIION V57 — partial migration for an ALREADY-RUNNING app
+-- ════════════════════════════════════════════════════════════════
+--  Feature: SO Dashboard "আজকের মোট বিক্রয়" (Today's Total Sale)
+--  widget now shows the NET sale (bonus pieces subtracted), and
+--  Owner/Manager Point Sale now requires selecting an SO so the sale
+--  gets attributed correctly.
+--
+--  ✅ THERE IS NOTHING TO RUN HERE.
+--
+--  Every column this feature depends on already exists in your V56
+--  schema:
+--    products.case_size
+--    products.bonus_free_units
+--    products.bonus_cases_req
+--    transactions.sr_id            (already nullable/blank-able, TEXT)
+--
+--  This update is 100% application-code — it only changes:
+--    • api/dashboard.js   (the today's-sale calculation)
+--    • public/index.html  (the widget copy + the Point Sale wizard's
+--                           new "SO বাছাই করুন" step)
+--
+--  To deploy: just replace those two files (or redeploy the project)
+--  on your existing Vercel + Supabase setup. No ALTER TABLE, no data
+--  backfill, no downtime required.
+--
+--  This file is included only so your migration folder stays
+--  consistent with previous versions (V56 shipped a real
+--  AXIION_V56_partial_migration.sql for its column rename) — for V57
+--  there is simply no schema delta.
+-- ════════════════════════════════════════════════════════════════
