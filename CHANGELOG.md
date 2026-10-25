@@ -18,7 +18,8 @@ Same app, same logo / names / UI / PIN system. Reduced to **Owner + Manager** on
 - Login: only the Owner and Manager PINs work (checked on the server). DSRs are names the owner records work against — no DSR / SO / Driver login.
 - Giving stock to a DSR now **deducts stock immediately** (no van-load confirm step).
 - Removed from menus and server: attendance / punch-in, live location tracking, GPS requests, group chat, notice board, orders (SO), targets, salary-advance approvals, important numbers.
-- Staff form now creates DSRs only.
+- Staff form now creates DSRs only. Every "DSR/SO" label now reads "DSR".
+- Home page: target widget and SO-target box removed; the DSR-wise due list (who owes how much) is back on the home page.
 - Menu (owner): settle, due collect, point sale, online deposit, DSR transactions, company transactions, returns report, products, DSR list, shops, due calendar, reports, expenses, settings, passwords, reset. Manager: same without reports / settings / reset.
 - `schema_fresh.sql`: ships with **no starter products** (owner adds his own) and includes the perf + v5.21 columns. Run once on a new, empty Supabase project.
 
