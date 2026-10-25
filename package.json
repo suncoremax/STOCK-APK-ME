@@ -1,12 +1,19 @@
 {
-  "name": "axiion-stock-management",
-  "version": "4.6.0",
-  "description": "AXIION স্টক ও সেলস ম্যানেজমেন্ট সিস্টেম — Developed by AXIION TECHNOLOGY",
+  "name": "axiion-business-manager",
+  "version": "6.0.0",
   "private": true,
+  "description": "AXIION Business Manager — owner + manager stock & business management",
   "dependencies": {
     "@supabase/supabase-js": "^2.43.0"
   },
+  "devDependencies": {
+    "esbuild": "^0.21.5"
+  },
   "engines": {
     "node": "22.x"
+  },
+  "scripts": {
+    "build": "node build.js",
+    "test": "node tests/api.test.js"
   }
 }
