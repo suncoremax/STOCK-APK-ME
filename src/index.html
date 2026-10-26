@@ -368,6 +368,14 @@ body.dark .ovl{background:rgba(10,10,9,.88)}
 .pin-dots{display:flex;gap:13px;margin-bottom:18px}
 .pin-dot{width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:transparent;transition:background-color .25s,border-color .25s,transform .25s}
 .pin-dot.filled{background:var(--gold-grad);border-color:#D4AF37;transform:scale(1.15);box-shadow:0 0 10px -1px rgba(16,185,129,.6)}
+.pin-load{display:inline-flex;align-items:center;gap:8px;color:#E9D8A6}
+.pin-spin{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.25);border-top-color:#D4AF37;animation:pinspin .7s linear infinite}
+@keyframes pinspin{to{transform:rotate(360deg)}}
+.pin-dots.shake{animation:pinshake .35s}
+@keyframes pinshake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.pin-dots.busy .pin-dot.filled{animation:pinpulse .9s ease-in-out infinite}
+@keyframes pinpulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pin-pad.busy{opacity:.55;pointer-events:none}
 .pin-err{color:#FF6B5E;font-size:12px;font-weight:700;margin-bottom:13px;min-height:16px;text-align:center}
 .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;width:240px;touch-action:manipulation}
 .pin-btn{height:64px;border-radius:18px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.07);color:#fff;font-size:22px;font-weight:700;cursor:pointer;transition:background-color .12s,transform .12s;display:flex;align-items:center;justify-content:center;font-family:var(--font-ui);touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;backdrop-filter:blur(6px)}
@@ -1014,18 +1022,18 @@ body.dark .mn-row,body.dark .mn-sq:not(.out){background:rgba(148,163,184,.22);bo
   </div>
   <div class="pin-err" id="pin-err"></div>
   <div class="pin-pad">
-    <button class="pin-btn" ontouchstart="pinKey('1',this);event.preventDefault()" onclick="pinKey('1',this)">১</button>
-    <button class="pin-btn" ontouchstart="pinKey('2',this);event.preventDefault()" onclick="pinKey('2',this)">২</button>
-    <button class="pin-btn" ontouchstart="pinKey('3',this);event.preventDefault()" onclick="pinKey('3',this)">৩</button>
-    <button class="pin-btn" ontouchstart="pinKey('4',this);event.preventDefault()" onclick="pinKey('4',this)">৪</button>
-    <button class="pin-btn" ontouchstart="pinKey('5',this);event.preventDefault()" onclick="pinKey('5',this)">৫</button>
-    <button class="pin-btn" ontouchstart="pinKey('6',this);event.preventDefault()" onclick="pinKey('6',this)">৬</button>
-    <button class="pin-btn" ontouchstart="pinKey('7',this);event.preventDefault()" onclick="pinKey('7',this)">৭</button>
-    <button class="pin-btn" ontouchstart="pinKey('8',this);event.preventDefault()" onclick="pinKey('8',this)">৮</button>
-    <button class="pin-btn" ontouchstart="pinKey('9',this);event.preventDefault()" onclick="pinKey('9',this)">৯</button>
+    <button class="pin-btn" ontouchend="pinKey('1',this);event.preventDefault()" onclick="pinKey('1',this)">১</button>
+    <button class="pin-btn" ontouchend="pinKey('2',this);event.preventDefault()" onclick="pinKey('2',this)">২</button>
+    <button class="pin-btn" ontouchend="pinKey('3',this);event.preventDefault()" onclick="pinKey('3',this)">৩</button>
+    <button class="pin-btn" ontouchend="pinKey('4',this);event.preventDefault()" onclick="pinKey('4',this)">৪</button>
+    <button class="pin-btn" ontouchend="pinKey('5',this);event.preventDefault()" onclick="pinKey('5',this)">৫</button>
+    <button class="pin-btn" ontouchend="pinKey('6',this);event.preventDefault()" onclick="pinKey('6',this)">৬</button>
+    <button class="pin-btn" ontouchend="pinKey('7',this);event.preventDefault()" onclick="pinKey('7',this)">৭</button>
+    <button class="pin-btn" ontouchend="pinKey('8',this);event.preventDefault()" onclick="pinKey('8',this)">৮</button>
+    <button class="pin-btn" ontouchend="pinKey('9',this);event.preventDefault()" onclick="pinKey('9',this)">৯</button>
     <button class="pin-btn" style="background:transparent"></button>
-    <button class="pin-btn" ontouchstart="pinKey('0',this);event.preventDefault()" onclick="pinKey('0',this)">০</button>
-    <button class="pin-btn del" ontouchstart="pinDel(this);event.preventDefault()" onclick="pinDel(this)">⌫</button>
+    <button class="pin-btn" ontouchend="pinKey('0',this);event.preventDefault()" onclick="pinKey('0',this)">০</button>
+    <button class="pin-btn del" ontouchend="pinDel(this);event.preventDefault()" onclick="pinDel(this)">⌫</button>
   </div>
   <div class="pin-hint">👑 Owner — আপনার ৫ সংখ্যার PIN দিন</div>
 </div>
@@ -1129,20 +1137,62 @@ function toggleTheme() { var d = !document.body.classList.contains('dark'); docu
 try { if (localStorage.getItem('axiion_theme') === 'dark') document.body.classList.add('dark'); } catch (e) { }
 
 /* ── PIN login ── */
-var _pin = '';
-function pinKey(k, el) { if (_pin.length >= 5) return; $('pin-err').textContent = ''; _pin += k; pinDots(); if (_pin.length === 5) setTimeout(pinSubmit, 120); }
-function pinDel() { _pin = _pin.slice(0, -1); pinDots(); }
+var _pin = '', _pinBusy = false;
+/* tap / success / error sounds — synthesized (no audio files), plus a tiny vibration on phones */
+var _ac = null;
+function tick(kind) {
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) {
+      if (!_ac) _ac = new AC();
+      if (_ac.state === 'suspended') _ac.resume();
+      var t = _ac.currentTime, o = _ac.createOscillator(), g = _ac.createGain();
+      var f = kind === 'err' ? 170 : kind === 'ok' ? 940 : kind === 'del' ? 420 : 640, d = kind === 'err' ? 0.24 : kind === 'ok' ? 0.16 : 0.055;
+      o.type = kind === 'err' ? 'triangle' : 'sine';
+      o.frequency.setValueAtTime(f, t); if (kind === 'ok') o.frequency.exponentialRampToValueAtTime(1320, t + d);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.2, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      o.connect(g); g.connect(_ac.destination); o.start(t); o.stop(t + d + 0.03);
+    }
+  } catch (e) { }
+  try { if (navigator.vibrate) navigator.vibrate(kind === 'err' ? [35, 30, 35] : 8); } catch (e) { }
+}
+function pinKey(k, el) {
+  if (_pinBusy || _pin.length >= 5) return;
+  tick('key'); $('pin-err').textContent = ''; _pin += k; pinDots();
+  if (_pin.length === 5) setTimeout(pinSubmit, 120);
+}
+function pinDel() { if (_pinBusy) return; tick('del'); _pin = _pin.slice(0, -1); pinDots(); }
 function pinDots() { for (var i = 0; i < 5; i++) $('pd' + i).classList.toggle('filled', i < _pin.length); }
+function pinBusy(on) {
+  _pinBusy = on;
+  var pad = document.querySelector('.pin-pad'), dots = document.querySelector('.pin-dots');
+  if (pad) pad.classList.toggle('busy', on); if (dots) dots.classList.toggle('busy', on);
+}
+function pinFail(msg) {
+  pinBusy(false); _pin = ''; pinDots(); tick('err');
+  $('pin-err').textContent = msg;
+  var d = document.querySelector('.pin-dots'); if (d) { d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake'); }
+}
 function pinSubmit() {
-  var p = _pin; _pin = ''; $('pin-err').textContent = '';
-  fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: p }) })
+  if (_pinBusy) return;
+  var p = _pin; _pin = ''; pinBusy(true);
+  $('pin-err').innerHTML = '<span class="pin-load"><span class="pin-spin"></span>যাচাই করা হচ্ছে...</span>';
+  for (var i = 0; i < 5; i++) $('pd' + i).classList.add('filled');   // dots stay filled (and pulse) while the server answers
+  // if the server is slow (cold start), tell the person it is still working
+  var slow = setTimeout(function () { if (_pinBusy) $('pin-err').innerHTML = '<span class="pin-load"><span class="pin-spin"></span>সার্ভার প্রস্তুত হচ্ছে, একটু অপেক্ষা করুন...</span>'; }, 3500);
+  var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  var kill = setTimeout(function () { if (ctl) ctl.abort(); }, 30000);
+  fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: p }), signal: ctl ? ctl.signal : undefined })
     .then(function (r) { return r.json(); }).then(function (j) {
-      pinDots();
-      if (!j.ok) { $('pin-err').textContent = j.error || 'ভুল পাসওয়ার্ড'; return; }
+      clearTimeout(slow); clearTimeout(kill);
+      if (!j.ok) return pinFail(j.error || 'ভুল পাসওয়ার্ড');
+      tick('ok');
+      $('pin-err').innerHTML = '<span class="pin-load"><span class="pin-spin"></span>লোড হচ্ছে...</span>';
       S.token = j.token; try { sessionStorage.setItem('axiion_token', j.token); localStorage.removeItem('axiion_token'); } catch (e) { }
+      pinBusy(false); _pin = ''; pinDots();
       if (j.mustChangePw) return forcePinChange();
       enterApp();
-    }).catch(function () { pinDots(); $('pin-err').textContent = 'সার্ভারের সাথে যোগাযোগ হচ্ছে না'; });
+    }).catch(function () { clearTimeout(slow); clearTimeout(kill); pinFail('সার্ভারের সাথে যোগাযোগ হচ্ছে না — আবার চেষ্টা করুন'); });
 }
 function forcePinChange() {
   $('pin-screen').style.display = 'none';   // the PIN screen (z-index 99999) would otherwise cover this window (z-index 9000)
