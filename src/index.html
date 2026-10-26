@@ -1145,6 +1145,7 @@ function pinSubmit() {
     }).catch(function () { pinDots(); $('pin-err').textContent = 'সার্ভারের সাথে যোগাযোগ হচ্ছে না'; });
 }
 function forcePinChange() {
+  $('pin-screen').style.display = 'none';   // the PIN screen (z-index 99999) would otherwise cover this window (z-index 9000)
   modal('<div class="sc-modal-name">🔐 নতুন PIN সেট করুন</div><div style="font-size:12px;color:var(--mt);margin:6px 0 10px">প্রথমবার ঢুকেছেন — ১২৩৪৫ বদলে নিজের ৫ সংখ্যার PIN দিন।</div>' +
     '<input id="np1" type="password" inputmode="numeric" maxlength="5" placeholder="নতুন PIN" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--bdr);font-size:18px;text-align:center;letter-spacing:6px;margin-bottom:8px">' +
     '<input id="np2" type="password" inputmode="numeric" maxlength="5" placeholder="আবার লিখুন" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--bdr);font-size:18px;text-align:center;letter-spacing:6px">' +
