@@ -17,6 +17,10 @@ module.exports = async (req, res) => {
       const ip = String((req.headers['x-forwarded-for'] || '')).split(',')[0].trim() || 'x';
       if (throttled(ip)) return res.json({ ok: false, error: 'অনেকবার ভুল হয়েছে — ১০ মিনিট পরে চেষ্টা করুন' });
       const pin = String(d.password || '').trim();
+      // tell a wrong PIN apart from a broken setup (wrong Supabase keys / schema.sql not run yet)
+      const probe = await supabase.from('user_passwords').select('user_key').eq('user_key', 'owner').maybeSingle();
+      if (probe.error) return res.json({ ok: false, error: 'ডাটাবেসে সংযোগ হচ্ছে না — Vercel-এ SUPABASE_URL ও SUPABASE_SERVICE_KEY (service_role) ঠিক আছে কিনা এবং schema.sql চালানো হয়েছে কিনা দেখুন' });
+      if (!probe.data) return res.json({ ok: false, error: 'Owner অ্যাকাউন্ট নেই — Supabase-এ schema.sql চালান' });
       if (!validPin(pin) || !(await verifyOwnerPin(pin))) {
         hits.get(ip).push(Date.now());
         return res.json({ ok: false, error: 'ভুল পাসওয়ার্ড' });

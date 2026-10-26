@@ -1130,9 +1130,9 @@ try { if (localStorage.getItem('axiion_theme') === 'dark') document.body.classLi
 
 /* ── PIN login ── */
 var _pin = '';
-function pinKey(k, el) { if (_pin.length >= 5) return; _pin += k; pinDots(); if (_pin.length === 5) setTimeout(pinSubmit, 120); }
+function pinKey(k, el) { if (_pin.length >= 5) return; $('pin-err').textContent = ''; _pin += k; pinDots(); if (_pin.length === 5) setTimeout(pinSubmit, 120); }
 function pinDel() { _pin = _pin.slice(0, -1); pinDots(); }
-function pinDots() { for (var i = 0; i < 5; i++) $('pd' + i).classList.toggle('on', i < _pin.length); }
+function pinDots() { for (var i = 0; i < 5; i++) $('pd' + i).classList.toggle('filled', i < _pin.length); }
 function pinSubmit() {
   var p = _pin; _pin = ''; $('pin-err').textContent = '';
   fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: p }) })
