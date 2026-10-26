@@ -1139,7 +1139,7 @@ function pinSubmit() {
     .then(function (r) { return r.json(); }).then(function (j) {
       pinDots();
       if (!j.ok) { $('pin-err').textContent = j.error || 'ভুল পাসওয়ার্ড'; return; }
-      S.token = j.token; try { localStorage.setItem('axiion_token', j.token); } catch (e) { }
+      S.token = j.token; try { sessionStorage.setItem('axiion_token', j.token); localStorage.removeItem('axiion_token'); } catch (e) { }
       if (j.mustChangePw) return forcePinChange();
       enterApp();
     }).catch(function () { pinDots(); $('pin-err').textContent = 'সার্ভারের সাথে যোগাযোগ হচ্ছে না'; });
@@ -1148,7 +1148,7 @@ function forcePinChange() {
   modal('<div class="sc-modal-name">🔐 নতুন PIN সেট করুন</div><div style="font-size:12px;color:var(--mt);margin:6px 0 10px">প্রথমবার ঢুকেছেন — ১২৩৪৫ বদলে নিজের ৫ সংখ্যার PIN দিন।</div>' +
     '<input id="np1" type="password" inputmode="numeric" maxlength="5" placeholder="নতুন PIN" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--bdr);font-size:18px;text-align:center;letter-spacing:6px;margin-bottom:8px">' +
     '<input id="np2" type="password" inputmode="numeric" maxlength="5" placeholder="আবার লিখুন" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--bdr);font-size:18px;text-align:center;letter-spacing:6px">' +
-    '<div id="np-err" style="color:var(--re);font-size:12px;min-height:16px;margin:8px 0"></div><button class="btn btn-bl btn-w" onclick="saveFirstPin()">সেভ করুন</button>');
+    '<div id="np-err" style="color:var(--re);font-size:12px;min-height:16px;margin:8px 0"></div><button class="btn btn-bl btn-w" onclick="saveFirstPin()">সেভ করুন</button><button class="btn btn-gh btn-w" style="margin-top:8px" onclick="closeModal();logout()">লগ আউট</button>');
 }
 function saveFirstPin() {
   var a = $('np1').value.trim(), b = $('np2').value.trim();
@@ -1159,8 +1159,8 @@ function saveFirstPin() {
     closeModal(); toast('PIN সেট হয়েছে ✓'); enterApp();
   });
 }
-function forceLogin() {
-  S.token = ''; try { localStorage.removeItem('axiion_token'); } catch (e) { }
+function forceLogin(keep) {   // keep=true: show the PIN screen but keep the session (needed to save the very first PIN)
+  if (!keep) { S.token = ''; try { sessionStorage.removeItem('axiion_token'); localStorage.removeItem('axiion_token'); } catch (e) { } }
   $('app').classList.remove('show'); $('pin-screen').style.display = 'flex'; $('pin-screen').style.opacity = 1; _pin = ''; pinDots();
 }
 function logout() { closeMenu(); forceLogin(); }
@@ -2249,9 +2249,9 @@ function doReset() {
 
 /* ═════════ boot ═════════ */
 (function () {
-  var t = null; try { t = localStorage.getItem('axiion_token'); } catch (e) { }
+  var t = null; try { localStorage.removeItem('axiion_token'); t = sessionStorage.getItem('axiion_token'); } catch (e) { }   // old 30-day saved logins are dropped
   setTimeout(function () { var s = $('spl'); if (s) { s.style.opacity = 0; setTimeout(function () { s.style.display = 'none'; }, 400); } }, 900);
-  if (t) { S.token = t; GET('auth').then(function (r) { if (r && r.ok) enterApp(); else forceLogin(); }).catch(forceLogin); } else forceLogin();
+  if (t) { S.token = t; GET('auth').then(function (r) { if (r && r.ok) { if (r.mustChangePw) { forceLogin(true); forcePinChange(); } else enterApp(); } else forceLogin(); }).catch(function () { forceLogin(); }); } else forceLogin();
 })();
 
 </script>

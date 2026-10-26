@@ -25,7 +25,7 @@ stock, commission, discount, damage, dues) exactly like the original AXIION DMS.
 4. Deploy. (Build command and output folder are already in `vercel.json`.)
 
 ## 3. First login
-Open the site → PIN **12345** (first-setup PIN) → the app forces you to choose your own 5-digit PIN. After that you can change it any time from **সেটিং → PIN পরিবর্তন**.
+Open the site → PIN **12345** (first-setup PIN) → the app forces you to choose your own 5-digit PIN. The PIN is asked every time you open the app in a new browser session (login lasts for that session, max 12 hours — closing the tab/browser logs you out). Until you have chosen your own PIN the app keeps showing the "নতুন PIN সেট করুন" window, even after a reload. After that you can change it any time from **সেটিং → PIN পরিবর্তন**.
 
 **Locked out / 12345 not working on an existing database?** Run `reset-owner-pin.sql` in the Supabase SQL Editor (it only resets the login, no data is touched), then log in with 12345 again.
 Then: **সেটিং** → fill business name / address / mobile (printed on every slip).

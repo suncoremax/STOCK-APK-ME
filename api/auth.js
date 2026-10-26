@@ -41,7 +41,10 @@ module.exports = async (req, res) => {
     // everything below needs a valid session
     if (!requireAuth(req, res)) return;
 
-    if (req.method === 'GET') return res.json({ ok: true, role: 'owner', userId: 'owner', today: bdtToday() });
+    if (req.method === 'GET') {
+      const { data: st } = await supabase.from('user_passwords').select('must_change_pw').eq('user_key', 'owner').maybeSingle();
+      return res.json({ ok: true, role: 'owner', userId: 'owner', today: bdtToday(), mustChangePw: !!(st && st.must_change_pw) });
+    }
 
     if (req.method === 'POST' && d.action === 'verify') return res.json({ ok: await verifyOwnerPin(String(d.pin || '')) });
 

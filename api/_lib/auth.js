@@ -7,7 +7,8 @@
 const crypto = require('crypto');
 const { supabase } = require('./db');
 
-const TTL_MS = 30 * 24 * 3600 * 1000;   // 30 days
+const TTL_MS = 12 * 3600 * 1000;   // 12 hours — then the PIN is asked again
+const SETUP_PIN = '12345';          // first-setup PIN, valid ONLY until the owner has chosen a PIN of their own
 const PIN_RE = /^\d{5}$/;
 const validPin = (p) => typeof p === 'string' && PIN_RE.test(p.trim());
 const hashPin = (pin) => crypto.createHash('sha256').update('axiion:' + String(pin).trim()).digest('hex');
@@ -43,8 +44,10 @@ function requireAuth(req, res) {
 // The owner's PIN check for sensitive actions (delete / edit / reset). Constant-time compare.
 async function verifyOwnerPin(pin) {
   if (!validPin(pin)) return false;
-  const { data } = await supabase.from('user_passwords').select('password').eq('user_key', 'owner').maybeSingle();
+  const { data } = await supabase.from('user_passwords').select('password,must_change_pw').eq('user_key', 'owner').maybeSingle();
   if (!data) return false;
+  // first-setup state: 12345 is accepted until the owner picks a real PIN (then it stops working for good)
+  if (data.must_change_pw && String(pin).trim() === SETUP_PIN) return true;
   const a = Buffer.from(String(data.password)), b = Buffer.from(hashPin(pin));
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
@@ -53,4 +56,4 @@ async function needPin(req, res, pin) {
   res.json({ ok: false, error: 'ভুল PIN — আবার চেষ্টা করুন' });
   return false;
 }
-module.exports = { validPin, hashPin, signToken, readToken, requireAuth, verifyOwnerPin, needPin };
+module.exports = { SETUP_PIN, validPin, hashPin, signToken, readToken, requireAuth, verifyOwnerPin, needPin };
