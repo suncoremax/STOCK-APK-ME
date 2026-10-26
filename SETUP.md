@@ -7,7 +7,7 @@ stock, commission, discount, damage, dues) exactly like the original AXIION DMS.
 ## 1. Supabase (new, empty project)
 1. supabase.com → New project.
 2. **SQL Editor → New query →** paste the whole of `schema.sql` → **Run**.
-   (It creates every table, function, the `thumbs` photo bucket, 35 starter products and the Owner login.
+   (It creates every table, function, the `thumbs` photo bucket and the Owner login — no products, you add your own.
    It refuses to run if the database already contains data.)
 3. Project Settings → API → copy **Project URL** and the **service_role** key.
 
