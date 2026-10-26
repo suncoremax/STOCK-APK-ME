@@ -1,6 +1,7 @@
 const { supabase, cors, safeErr, bdtToday } = require('./_lib/db');
 const { validPin, hashPin, signToken, requireAuth, verifyOwnerPin } = require('./_lib/auth');
 
+const SETUP_PIN = '12345';   // first-setup PIN — the app forces a change right after the first login
 const hits = new Map();   // best-effort login throttle (per server instance)
 function throttled(ip) {
   const now = Date.now(), h = (hits.get(ip) || []).filter(t => now - t < 600000);
@@ -18,10 +19,19 @@ module.exports = async (req, res) => {
       if (throttled(ip)) return res.json({ ok: false, error: 'অনেকবার ভুল হয়েছে — ১০ মিনিট পরে চেষ্টা করুন' });
       const pin = String(d.password || '').trim();
       // tell a wrong PIN apart from a broken setup (wrong Supabase keys / schema.sql not run yet)
-      const probe = await supabase.from('user_passwords').select('user_key').eq('user_key', 'owner').maybeSingle();
+      const probe = await supabase.from('user_passwords').select('user_key,password,must_change_pw').eq('user_key', 'owner').maybeSingle();
       if (probe.error) return res.json({ ok: false, error: 'ডাটাবেসে সংযোগ হচ্ছে না — Vercel-এ SUPABASE_URL ও SUPABASE_SERVICE_KEY (service_role) ঠিক আছে কিনা এবং schema.sql চালানো হয়েছে কিনা দেখুন' });
-      if (!probe.data) return res.json({ ok: false, error: 'Owner অ্যাকাউন্ট নেই — Supabase-এ schema.sql চালান' });
-      if (!validPin(pin) || !(await verifyOwnerPin(pin))) {
+      // FIRST SETUP: if the Owner row is missing, create it with the setup PIN (12345) — no manual SQL needed.
+      if (!probe.data) {
+        const ins = await supabase.from('user_passwords').insert({ user_key: 'owner', user_name: 'Owner', role: 'owner', password: hashPin(SETUP_PIN), must_change_pw: true });
+        if (ins.error) return res.json({ ok: false, error: 'Owner অ্যাকাউন্ট তৈরি করা যায়নি — Supabase-এ schema.sql চালান' });
+        probe.data = { user_key: 'owner', password: hashPin(SETUP_PIN), must_change_pw: true };
+      }
+      // Still in first-setup state (owner never chose a PIN) → the setup PIN 12345 always works,
+      // and the stored hash is repaired in case it was written wrongly.
+      if (probe.data.must_change_pw && pin === SETUP_PIN) {
+        if (probe.data.password !== hashPin(SETUP_PIN)) await supabase.from('user_passwords').update({ password: hashPin(SETUP_PIN) }).eq('user_key', 'owner');
+      } else if (!validPin(pin) || !(await verifyOwnerPin(pin))) {
         hits.get(ip).push(Date.now());
         return res.json({ ok: false, error: 'ভুল পাসওয়ার্ড' });
       }

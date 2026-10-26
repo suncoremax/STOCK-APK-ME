@@ -718,4 +718,5 @@ $$;
 
 -- ═══════════════ THE ONE OWNER LOGIN  (PIN 12345 → forced change at first login) ═══════════════
 INSERT INTO user_passwords (user_key, user_name, role, password, must_change_pw)
-VALUES ('owner', 'Owner', 'owner', encode(digest('axiion:12345', 'sha256'), 'hex'), true);
+VALUES ('owner', 'Owner', 'owner', encode(sha256(convert_to('axiion:12345', 'UTF8')), 'hex'), true)
+ON CONFLICT (user_key) DO UPDATE SET password = EXCLUDED.password, must_change_pw = true;
