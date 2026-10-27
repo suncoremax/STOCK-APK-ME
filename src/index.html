@@ -1044,7 +1044,7 @@ body{font-size:16px!important;line-height:1.5}
       <div class="hdr-s" id="hdr-sub">লোড হচ্ছে...</div>
     </div>
     <div class="hdr-actions">
-      <div id="role-badge" style="background:var(--bll);border:1px solid rgba(16,185,129,.35);color:var(--bl);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:700">👑 Owner</div>
+      <div id="role-badge" style="background:var(--bll);border:1px solid rgba(16,185,129,.35);color:var(--bl);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:700">👑 মালিক</div>
       <button ontouchstart="refreshApp();event.preventDefault()" onclick="refreshApp()" style="background:var(--card);border:1px solid var(--bdr);color:var(--txt);border-radius:10px;padding:6px 10px;font-size:15px;cursor:pointer;line-height:1;font-family:inherit">🔄</button>
     </div>
   </div>
@@ -1076,7 +1076,7 @@ body{font-size:16px!important;line-height:1.5}
     <div class="sm-logo" id="sm-logo" style="overflow:hidden"><img src="/logo.png" alt="AXIION DMS" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit"></div>
     <div>
       <div class="sm-name">AXIION DMS</div>
-      <div class="sm-role" id="menu-role-label">👑 Owner</div>
+      <div class="sm-role" id="menu-role-label">👑 মালিক</div>
     </div>
     <button class="side-menu-close" ontouchstart="closeMenu();event.preventDefault()" onclick="closeMenu()">✕</button>
   </div>
@@ -1084,11 +1084,11 @@ body{font-size:16px!important;line-height:1.5}
 </div>
 
 <div class="ovl" id="ovl" style="display:none"><div class="spin"></div><div class="ovl-m" id="ovl-m">লোড হচ্ছে...</div></div>
-<!-- Owner PIN re-verification — prevents accidental mis-touches on sensitive actions (e.g. changing office location) -->
+<!-- মালিকের পিন re-verification — prevents accidental mis-touches on sensitive actions (e.g. changing office location) -->
 <div class="sc-modal-bg" id="pinc-bg" style="display:none">
   <div class="sc-modal" style="max-width:300px">
     <div class="sc-modal-body">
-      <div class="sc-modal-name" id="pinc-title">নিশ্চিত করতে Owner PIN দিন</div>
+      <div class="sc-modal-name" id="pinc-title">নিশ্চিত করতে মালিকের পিন দিন</div>
       <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="5" id="pinc-input"
              placeholder="৫-সংখ্যার PIN"
              style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--bdr);font-size:20px;text-align:center;letter-spacing:8px;margin:10px 0;box-sizing:border-box;font-family:'Inter','Noto Sans','Noto Sans Bengali','Hind Siliguri',sans-serif">
@@ -1130,7 +1130,7 @@ body{font-size:16px!important;line-height:1.5}
     <button class="pin-btn" ontouchend="pinKey('0',this);event.preventDefault()" onclick="pinKey('0',this)">০</button>
     <button class="pin-btn del" ontouchend="pinDel(this);event.preventDefault()" onclick="pinDel(this)">⌫</button>
   </div>
-  <div class="pin-hint">👑 Owner — আপনার ৫ সংখ্যার PIN দিন</div>
+  <div class="pin-hint">👑 মালিক — আপনার ৫ সংখ্যার PIN দিন</div>
 </div>
 <script id="app-js">
 // ════════════════════════════════════════════════════
@@ -1209,10 +1209,10 @@ function modal(html, wide) {
   document.body.appendChild(d);
 }
 function closeModal() { var m = $('mdl'); if (m) m.remove(); }
-/* ── Owner PIN confirmation (delete / reset) ── */
+/* ── মালিকের পিন confirmation (delete / reset) ── */
 var _pincCb = null;
 function askPin(title, cb) {
-  _pincCb = cb; $('pinc-title').textContent = title || 'নিশ্চিত করতে Owner PIN দিন';
+  _pincCb = cb; $('pinc-title').textContent = title || 'নিশ্চিত করতে মালিকের পিন দিন';
   $('pinc-input').value = ''; $('pinc-err').textContent = ''; $('pinc-bg').style.display = 'flex'; setTimeout(function () { $('pinc-input').focus(); }, 60);
 }
 function _pincCancel() { $('pinc-bg').style.display = 'none'; _pincCb = null; }
@@ -1225,7 +1225,7 @@ function _pincSubmit() {
   });
 }
 /* "মুছে ফেলুন?" → PIN → call */
-function confirmDelete(what, fn) { if (!confirm(what + '\nএটি মুছে ফেললে হিসাব ও স্টক আগের অবস্থায় ফিরে যাবে।')) return; askPin('মুছতে Owner PIN দিন', fn); }
+function confirmDelete(what, fn) { if (!confirm(what + '\nএটি মুছে ফেললে হিসাব ও স্টক আগের অবস্থায় ফিরে যাবে।')) return; askPin('মুছতে মালিকের পিন দিন', fn); }
 
 /* ── theme ── */
 function toggleTheme() { var d = !document.body.classList.contains('dark'); document.body.classList.toggle('dark', d); try { localStorage.setItem('axiion_theme', d ? 'dark' : 'light'); } catch (e) { } buildSideMenu(); }
@@ -1377,10 +1377,10 @@ window.axIcon=function(k){return '<span class="ai"><svg viewBox="0 0 24 24">'+(A
 
 /* ═════════ navigation ═════════ */
 var MENU_ITEMS = [
-  { id: 'dash', lb: 'হোম', ic: 'home' }, { id: 'settle', lb: 'দেওয়া, ফেরত ও পেমেন্ট', ic: 'calc' },
-  { id: 'prod', lb: 'পণ্য ও স্টক', ic: 'box' }, { id: 'psale', lb: 'পয়েন্ট সেল', ic: 'cart' }, { id: 'tx', lb: 'কোম্পানি লেনদেন', ic: 'receipt' },
+  { id: 'dash', lb: 'হোম', ic: 'home' }, { id: 'settle', lb: 'মাল দেওয়া ও দিনশেষ হিসাব', ic: 'calc' },
+  { id: 'prod', lb: 'পণ্য ও স্টক', ic: 'box' }, { id: 'psale', lb: 'সরাসরি বিক্রয়', ic: 'cart' }, { id: 'tx', lb: 'কোম্পানি লেনদেন', ic: 'receipt' },
   { id: 'sr', lb: 'DSR / SO', ic: 'users' },
-  { id: 'shops', lb: 'দোকান ও গ্রাহক', ic: 'store' }, { id: 'duecol', lb: 'বাকি আদায়', ic: 'wallet' },
+  { id: 'shops', lb: 'দোকান ও গ্রাহক', ic: 'store' }, { id: 'duecol', lb: 'দোকানের বাকি আদায়', ic: 'wallet' },
   { id: 'rep', lb: 'রিপোর্ট', ic: 'chart' }, { id: 'exp', lb: 'খরচ', ic: 'wallet' },
   { id: 'numbers', lb: 'গুরুত্বপূর্ণ নম্বর', ic: 'phone' }, { id: 'settings', lb: 'সেটিং', ic: 'cog' }];
 /* menu order = how often it is used: the daily work first, rarely-used things last (same as the autonomous app) */
@@ -1547,7 +1547,7 @@ function _animateNum(el, target) {
   if (!window.requestAnimationFrame) { el.textContent = tk(target); return; }
   requestAnimationFrame(step);
 }
-var QA_TILES = [['prod', '📦', 'পণ্য ও স্টক'], ['settle', '🧮', 'দেওয়া, ফেরত ও পেমেন্ট'], ['psale', '🛒', 'পয়েন্ট সেল'], ['tx', '🧾', 'কোম্পানি লেনদেন'], ['duecol', '💵', 'বাকি আদায়'],
+var QA_TILES = [['prod', '📦', 'পণ্য ও স্টক'], ['settle', '🧮', 'মাল দেওয়া ও দিনশেষ হিসাব'], ['psale', '🛒', 'সরাসরি বিক্রয়'], ['tx', '🧾', 'কোম্পানি লেনদেন'], ['duecol', '💵', 'দোকানের বাকি আদায়'],
   ['sr', '👥', 'DSR / SO'], ['shops', '🏪', 'দোকান ও গ্রাহক'], ['rep', '🥧', 'রিপোর্ট'], ['exp', '💰', 'খরচ']];
 function quickActionsHtml() {
   return '<div class="ct">⚡ দ্রুত একশন প্যানেল</div><div class="qa-grid">' + QA_TILES.map(function (q) {
@@ -1573,7 +1573,7 @@ function lowStockHtml(r) {
 }
 function drawDash() {
   var r = S.dash, today = S.dashView === 'today', st = today ? r.todayStats : r.cycleStats, ms = r.cycleStats, h = '';
-  var due = r2(r.totalDsrDue + r.totalShopDue), lbl = today ? 'আজ' : 'এই মাস', profit = st.netProfit, pc = profit >= 0 ? 'var(--gr)' : 'var(--re)';
+  var due = r2(r.totalDsrDue + r.totalShopDue), lbl = today ? 'আজ' : 'এই মাস', profit = N(st.finalProfit), pc = profit >= 0 ? 'var(--gr)' : 'var(--re)';
   h += lowStockHtml(r);
   // range pills (আজ / এই মাস) — same pill bar as the autonomous app's sales-range picker
   h += '<div class="card" style="padding:6px;display:flex;gap:4px;margin-bottom:10px">' + [['today', 'আজ'], ['cycle', 'এই মাস']].map(function (x) {
@@ -1582,8 +1582,8 @@ function drawDash() {
   // hero: the only loud thing on open — numbers count up
   h += '<div class="hero-grid" style="grid-template-columns:1fr 1fr">' +
     '<div class="hero-card"><div class="hero-l">' + lbl + ' বিক্রি</div><div class="hero-v" id="hv-rev">৳0</div></div>' +
-    '<div class="hero-card" style="border-top-color:' + (profit >= 0 ? 'var(--bl2)' : 'var(--re)') + '"><div class="hero-l">' + lbl + ' ' + (profit >= 0 ? 'নীট লাভ' : 'নীট ক্ষতি') + '</div><div class="hero-v" id="hv-prof" style="color:' + (profit >= 0 ? 'var(--bl)' : 'var(--re)') + '">৳0</div>' +
-    '<div id="hv-prof-sub" style="font-size:9.5px;line-height:1.4;color:var(--mt2);margin-top:4px">মোট লাভ ' + tk(st.grossProfit) + (st.commission > 0 ? ' − কমিশন ' + tk(st.commission) : '') + '</div></div>' +
+    '<div class="hero-card" style="border-top-color:' + (profit >= 0 ? 'var(--bl2)' : 'var(--re)') + '"><div class="hero-l">' + lbl + ' ' + (profit >= 0 ? 'চূড়ান্ত লাভ' : 'চূড়ান্ত ক্ষতি') + '</div><div class="hero-v" id="hv-prof" style="color:' + (profit >= 0 ? 'var(--bl)' : 'var(--re)') + '">৳0</div>' +
+    '<div id="hv-prof-sub" style="font-size:9.5px;line-height:1.4;color:var(--mt2);margin-top:4px">মোট লাভ ' + tk(st.grossProfit) + ' · কমিশন, ছাড়, ড্যামেজ, বোনাস ও খরচ ধরে</div></div>' +
     '<div class="hero-card"><div class="hero-l">' + lbl + ' নগদ জমা</div><div class="hero-v" style="color:var(--te)">' + tk(st.cashTotal) + '</div></div>' +
     '<div class="hero-card" style="border-top-color:var(--re)"><div class="hero-l">মোট বাকি</div><div class="hero-v" style="color:var(--re)">' + tk(due) + '</div></div></div>';
   h += quickActionsHtml();
@@ -1593,11 +1593,10 @@ function drawDash() {
   if (st.bonus > 0) h += '<div class="ib">🎁 কোম্পানির বোনাস / ফ্রি (পাওনা): ' + tk(st.bonus) + '</div>';
   h += _acc('hg', '📊', 'আজ ও এই মাসের বিস্তারিত হিসাব', '', hgHtml(r).replace('<div class="ct">📊 আজ ও এই মাসের হিসাব</div>', ''), false);
   // এই মাস — open by default (the figure owners check most)
-  var mp = ms.netProfit >= 0 ? 'var(--gr)' : 'var(--re)';
+  var mp = N(ms.finalProfit) >= 0 ? 'var(--gr)' : 'var(--re)';
   var monthBody = '<div class="mets"><div class="met met-b"><div class="ml">নিট বিক্রয়</div><div class="mv">' + tk(ms.sale) + '</div></div>' +
-    '<div class="met" style="border-top:3px solid ' + mp + '"><div class="ml">' + (ms.netProfit >= 0 ? 'নীট লাভ' : 'নীট ক্ষতি') + '</div><div class="mv" style="color:' + mp + '">' + tk(Math.abs(ms.netProfit)) + '</div></div>' +
-    '<div class="met" style="grid-column:1/-1;border-top:3px solid var(--bl2);text-align:left"><div class="ml">নীট লাভের হিসাব (এই মাস)</div><div style="font-size:11.5px;line-height:1.7;color:var(--mt)">মোট লাভ ' + tk(ms.grossProfit) + ' − কমিশন ' + tk(ms.commission) +
-    '<br>তথ্য: ছাড় ' + tk(ms.discount) + ' · ড্যামেজ ক্ষতি ' + tk(ms.damageLoss) + ' · কোম্পানি বোনাস/ফ্রি ' + tk(ms.bonus) + ' · খরচ ' + tk(ms.expenses) + '</div></div>' +
+    '<div class="met" style="border-top:3px solid ' + mp + '"><div class="ml">' + (N(ms.finalProfit) >= 0 ? 'চূড়ান্ত লাভ' : 'চূড়ান্ত ক্ষতি') + '</div><div class="mv" style="color:' + mp + '">' + tk(Math.abs(ms.finalProfit)) + '</div></div>' +
+    '<div class="met" style="grid-column:1/-1;border-top:3px solid var(--bl2);text-align:left"><div class="ml" style="margin-bottom:4px">লাভ-ক্ষতির পুরো হিসাব (এই মাস)</div><div style="font-size:12px">' + profitWaterfall(ms) + '</div></div>' +
     '<div class="met met-a"><div class="ml">নগদ জমা</div><div class="mv">' + tk(ms.cashTotal) + '</div></div><div class="met met-r"><div class="ml">মোট বাকি</div><div class="mv">' + tk(due) + '</div></div></div>';
   h += _acc('month', '📆', 'এই মাস', tk(ms.sale), monthBody, true);
   // স্টক মূল্য — reference data, closed by default
@@ -1606,7 +1605,7 @@ function drawDash() {
   h += _acc('stock', '📊', 'স্টক মূল্য বিশ্লেষণ', tk(r.stockValue), stockBody, false);
   // DSR / SO dues
   var dBody = '<div class="card" style="padding:0;overflow:hidden;margin-top:8px">';
-  if (!r.dsrs.length) dBody += '<div style="padding:20px;text-align:center;color:var(--mt2)">কোনো DSR/SO নেই — "ডিএসআর / এসও" মেনু থেকে নাম যোগ করুন</div>';
+  if (!r.dsrs.length) dBody += '<div style="padding:20px;text-align:center;color:var(--mt2)">কোনো DSR/SO নেই — "DSR / SO" মেনু থেকে নাম যোগ করুন</div>';
   r.dsrs.forEach(function (d) {
     var dc = d.due > 0.5 ? 'var(--re)' : 'var(--gr)';
     dBody += '<div class="dr" style="cursor:pointer" onclick="openSettleFor(\'' + d.id + '\',\'dayend\')"><div style="display:flex;align-items:center;gap:9px"><div class="sr-av" style="width:40px;height:40px;font-size:16px">' + esc(String(d.name || '').charAt(0) || '?') + '</div>' +
@@ -1617,39 +1616,47 @@ function drawDash() {
   h += _acc('dues', '💰', 'DSR/SO বাকির তালিকা', '<span style="color:var(--re)">' + tk(r.totalDsrDue) + '</span>', dBody, false);
   // recent day-end slips
   var sBody = '<div class="card" style="padding:0;overflow:hidden;margin-top:8px">';
-  if (!r.recentSlips.length) sBody += '<div style="padding:20px;text-align:center;color:var(--mt2)">এখনও কোনো স্লিপ নেই</div>';
+  if (!r.recentSlips.length) sBody += '<div style="padding:20px;text-align:center;color:var(--mt2)">এখনও কোনো দিনশেষ হিসাব হয়নি</div>';
   r.recentSlips.forEach(function (s) {
     sBody += '<div class="dr"><span><b>' + esc(s.dsrName) + '</b><br><small style="color:var(--mt)">' + esc(s.slipNo) + ' · ' + dmy(s.date) + '</small></span><span style="text-align:right"><b>' + tk(s.cashAmt) + '</b><br><small style="color:' + (s.dueAfter > 0.5 ? 'var(--re)' : 'var(--gr)') + '">বাকি ' + tk(s.dueAfter) + '</small></span></div>';
   });
-  sBody += '<div style="padding:8px"><button class="btn btn-gh btn-w" onclick="openSettleFor(\'\',\'slips\')">সব স্লিপ দেখুন</button></div></div>';
-  h += _acc('slips', '🧾', 'সাম্প্রতিক দিনশেষ স্লিপ', '', sBody, false);
+  sBody += '<div style="padding:8px"><button class="btn btn-gh btn-w" onclick="openSettleFor(\'\',\'slips\')">সব হিসাব দেখুন</button></div></div>';
+  h += _acc('slips', '🧾', 'সাম্প্রতিক দিনশেষ হিসাব', '', sBody, false);
   h += '<div style="text-align:center;font-size:10px;color:var(--mt2);padding:8px">' + esc(S.shopName || 'AXIION DMS') + ' · Powered by <span style="color:#FBBF24;font-weight:700">AXIION DMS</span></div>';
   $('pg-dash').innerHTML = h;
   _animateNum($('hv-rev'), N(st.sale)); _animateNum($('hv-prof'), N(profit));
 }
 function row(l, v) { return '<div class="dr"><span>' + l + '</span><b>' + v + '</b></div>'; }
+/* full profit / loss waterfall — the one place that explains the final number */
+function profitWaterfall(p) {
+  var f = N(p.finalProfit), col = f >= 0 ? 'var(--gr)' : 'var(--re)';
+  return row('মোট লাভ (বিক্রয় − কেনা দাম)', tk(p.grossProfit)) + row('− কমিশন', tk(p.commission)) + row('− ছাড় / ডিসকাউন্ট', tk(p.discount)) +
+    row('− ড্যামেজ মাল (DSR / SO-কে ধরা ছিল, টাকা আসেনি)', tk(p.damageRev)) + row('+ ড্যামেজ দাবি (কোম্পানির কাছে, কেনা দামে)', tk(p.damageLoss)) +
+    row('+ বোনাস / ফ্রি (কোম্পানির কাছে পাওনা)', tk(p.bonus)) + row('− খরচ', tk(p.expenses)) +
+    '<div class="dr" style="font-weight:800;font-size:15px"><span>' + (f >= 0 ? 'চূড়ান্ত লাভ' : 'চূড়ান্ত ক্ষতি') + '</span><span style="color:' + col + '">' + tk(Math.abs(f)) + '</span></div>';
+}
 function openSettleFor(srId, tab) { S.st = S.st || {}; S.st.tab = tab || 'dayend'; S.st.dsr = srId || S.st.dsr || ''; S.de = null; gTab('settle'); }
 
-/* ═════════ দেওয়া · দিনশেষ স্লিপ · পেমেন্ট ═════════ */
+/* ═════════ মাল দেওয়া · দিনশেষ হিসাব · পুরনো বাকি জমা ═════════ */
 RENDER.settle = function () { S.st = S.st || {}; S.st.tab = S.st.tab || 'give'; S.st.date = S.st.date || todayStr(); drawSettle(); };
 function stTab(t) { S.st.tab = t; S.de = null; drawSettle(); }
 function drawSettle() {
-  var st = S.st, h = seg([['give', '📤 দেওয়া'], ['dayend', '🧾 দিনশেষ স্লিপ'], ['cash', '💵 পেমেন্ট'], ['slips', '📋 স্লিপ তালিকা']], st.tab, 'stTab') + '<div id="st-body"></div>';
+  var st = S.st, h = seg([['give', '📤 মাল দেওয়া'], ['dayend', '🧮 দিনশেষ হিসাব'], ['cash', '💵 পুরনো বাকি জমা'], ['slips', '📋 হিসাবের তালিকা']], st.tab, 'stTab') + '<div id="st-body"></div>';
   $('pg-settle').innerHTML = h;
   ({ give: drawGive, dayend: drawDayend, cash: drawCash, slips: drawSlips })[st.tab]();
 }
 function memoNo(prefix, id) { return prefix + '-' + String(id || '').replace(/-/g, '').slice(0, 6).toUpperCase(); }
 function afterSaveModal(title, lines, printFn) {
   modal('<div class="sc-modal-name">✅ ' + esc(title) + '</div><div style="margin:8px 0 12px">' + lines.map(function (l) { return '<div class="sc-modal-row"><span class="sc-modal-label">' + l[0] + '</span><span class="sc-modal-val">' + l[1] + '</span></div>'; }).join('') + '</div>' +
-    '<div style="display:flex;gap:8px">' + (printFn ? '<button class="btn btn-bl btn-w" onclick="closeModal();' + printFn + '">🖨 মেমো / প্রিন্ট</button>' : '') + '<button class="btn btn-gh btn-w" onclick="closeModal()">বন্ধ করুন</button></div>');
+    '<div style="display:flex;gap:8px">' + (printFn ? '<button class="btn btn-bl btn-w" onclick="closeModal();' + printFn + '">🖨 মেমো / রসিদ প্রিন্ট</button>' : '') + '<button class="btn btn-gh btn-w" onclick="closeModal()">বন্ধ করুন</button></div>');
 }
 
 /* ── 1. দেওয়া ── */
 function drawGive() {
   var st = S.st; ifInit('give', { mode: 'sell', stock: true });
-  $('st-body').innerHTML = '<div class="card"><div class="ct">📤 DSR / SO-কে পণ্য দিন</div>' +
-    '<div class="fg"><label class="fl">কাকে দিচ্ছেন *</label>' + srSelect('g-sr', st.dsr) + '</div>' +
-    '<div class="g2"><div class="fg"><label class="fl">তারিখ</label><input type="date" id="g-date" value="' + st.date + '"></div><div class="fg"><label class="fl">স্লিপ নং (ঐচ্ছিক)</label><input id="g-slip" maxlength="40"></div></div>' +
+  $('st-body').innerHTML = '<div class="card"><div class="ct">📤 DSR / SO-কে মাল দিন</div>' +
+    '<div class="fg"><label class="fl">কাকে মাল দিচ্ছেন *</label>' + srSelect('g-sr', st.dsr) + '</div>' +
+    '<div class="g2"><div class="fg"><label class="fl">তারিখ</label><input type="date" id="g-date" value="' + st.date + '"></div><div class="fg"><label class="fl">চালান নং (ঐচ্ছিক)</label><input id="g-slip" maxlength="40"></div></div>' +
     ifHtml('give') + '<div class="fg" style="margin-top:8px"><label class="fl">নোট</label><input id="g-note" maxlength="200"></div>' +
     '<button class="btn btn-bl btn-w" onclick="doGive()">✅ দেওয়া নিশ্চিত করুন</button></div><div id="g-list"></div>';
   ifDraw('give'); loadGiveList();
@@ -1662,7 +1669,7 @@ function doGive() {
   run(function () { return POST('transactions', { type: 'give', srId: sr, date: date, slipNo: $('g-slip').value, note: $('g-note').value, items: items }); }).then(function (r) {
     if (!r.ok) return toast(r.error || 'ত্রুটি', true);
     S.st.dsr = sr; S.lastMemo = r; reloadMasters().then(function () { drawGive(); });
-    afterSaveModal('পণ্য দেওয়া হয়েছে', [['কাকে', esc(r.srName)], ['মোট মূল্য', tk(r.total)]], 'printTxMemo()');
+    afterSaveModal('মাল দেওয়া হয়েছে', [['কাকে', esc(r.srName)], ['মোট মূল্য', tk(r.total)]], 'printTxMemo()');
   });
 }
 function printTxMemo() {
@@ -1684,7 +1691,7 @@ function groupTx(rows) {
 function txCard(g, kind) {
   var items = g.rows.map(function (r) { return esc(r.productName) + ' <b>' + qtyOf(r.totalUnits, r.productId) + '</b>'; }).join(' · ');
   return '<div class="prow"><div style="display:flex;justify-content:space-between;gap:8px"><b>' + esc(g.srName || (kind === 'buy' || kind === 'return_company' ? 'কোম্পানি' : '')) + '</b><b style="color:var(--bl)">' + tk(kind === 'buy' || kind === 'return_company' || kind === 'damage' ? g.rows.reduce(function (s, r) { return s + N(r.totalCost); }, 0) : g.total) + '</b></div>' +
-    '<div style="font-size:11.5px;color:var(--mt);margin:4px 0">' + items + '</div><div style="display:flex;gap:6px;align-items:center"><span class="dl">' + dmy(g.date) + (g.slipNo ? ' · স্লিপ ' + esc(g.slipNo) : '') + '</span><span style="flex:1"></span>' +
+    '<div style="font-size:11.5px;color:var(--mt);margin:4px 0">' + items + '</div><div style="display:flex;gap:6px;align-items:center"><span class="dl">' + dmy(g.date) + (g.slipNo ? ' · চালান ' + esc(g.slipNo) : '') + '</span><span style="flex:1"></span>' +
     '<button class="btn btn-gh btn-sm" onclick="reprintTx(\'' + g.txId + '\')">🖨</button><button class="btn btn-gh btn-sm" style="color:var(--re)" onclick="delTx(\'' + g.txId + '\')">🗑</button></div></div>';
 }
 function reprintTx(txId) {
@@ -1699,13 +1706,13 @@ function delTx(txId) {
   });
 }
 
-/* ── 2. দিনশেষ স্লিপ ── */
+/* ── 2. দিনশেষ হিসাব (ফেরত · ড্যামেজ · কমিশন · ছাড় · নগদ) ── */
 function drawDayend() {
   if (S.de) return drawDeForm();
   var st = S.st;
-  $('st-body').innerHTML = '<div class="card"><div class="ct">🧾 দিনশেষ হিসাব</div><div style="font-size:12px;color:var(--mt);margin-bottom:10px">DSR/SO দিনশেষে যে স্লিপ দিয়েছে (ফেরত, ড্যামেজ, কমিশন, ছাড়, নগদ) — সেটি এখানে লিখুন।</div>' +
-    '<div class="fg"><label class="fl">DSR / SO *</label>' + srSelect('de-sr', st.dsr) + '</div><div class="fg"><label class="fl">কোন দিনের স্লিপ</label><input type="date" id="de-date" value="' + st.date + '"></div>' +
-    '<button class="btn btn-bl btn-w" onclick="deOpen()">স্লিপ খুলুন →</button></div>';
+  $('st-body').innerHTML = '<div class="card"><div class="ct">🧮 DSR / SO-এর দিনশেষ হিসাব</div><div style="font-size:12px;color:var(--mt);margin-bottom:10px">মাল নিয়ে ফিরে এসে সে যা বুঝিয়ে দিচ্ছে — <b>ফেরত মাল, ড্যামেজ মাল, কমিশন, ছাড় ও জমা নগদ টাকা</b> — সব এখানে লিখুন। অ্যাপ নিজেই হিসাব করে দেখাবে কত টাকা জমা হওয়ার কথা, কত ঘাটতি আর কত বাকি থাকল।</div>' +
+    '<div class="fg"><label class="fl">DSR / SO *</label>' + srSelect('de-sr', st.dsr) + '</div><div class="fg"><label class="fl">কোন দিনের মালের হিসাব</label><input type="date" id="de-date" value="' + st.date + '"></div>' +
+    '<button class="btn btn-bl btn-w" onclick="deOpen()">হিসাব শুরু করুন →</button></div>';
 }
 function deOpen() {
   var sr = $('de-sr').value, date = $('de-date').value; if (!sr) return toast('DSR / SO বেছে নিন', true);
@@ -1720,8 +1727,8 @@ function deOpen() {
 function deUnits(c, p, pid) { var pr = prod(pid); return N(c) * (pr ? N(pr.caseSize) || 1 : 1) + N(p); }
 function drawDeForm() {
   var d = S.de, p = d.prep, h = '<div class="card"><div class="ct">🧾 ' + esc(d.sr.name) + ' · ' + dmy(d.date) + '</div>';
-  if (p.existingSlips && p.existingSlips.length) h += '<div class="bdg b-am" style="margin-bottom:8px">⚠ এই তারিখে আগে স্লিপ হয়েছে: ' + p.existingSlips.join(', ') + '</div>';
-  h += '<div class="dr"><span>এই তারিখে দেওয়া হয়েছিল</span><b>' + tk(p.givenAmt) + '</b></div><div class="dr"><span>এই স্লিপের আগে মোট বাকি</span><b style="color:var(--re)">' + tk(p.dueBefore) + '</b></div></div>';
+  if (p.existingSlips && p.existingSlips.length) h += '<div class="bdg b-am" style="margin-bottom:8px">⚠ এই তারিখে আগেও দিনশেষ হিসাব হয়েছে: ' + p.existingSlips.join(', ') + '</div>';
+  h += '<div class="dr"><span>এই তারিখে দেওয়া হয়েছিল</span><b>' + tk(p.givenAmt) + '</b></div><div class="dr"><span>এই হিসাবের আগে মোট বাকি</span><b style="color:var(--re)">' + tk(p.dueBefore) + '</b></div></div>';
   h += '<div class="card"><div class="ct">📦 পণ্যওয়ারি ফেরত ও ড্যামেজ</div>';
   if (!d.rows.length) h += '<div class="empty">এই তারিখে কিছু দেওয়া হয়নি। শুধু কমিশন/নগদ লিখতে পারেন, বা নিচ থেকে পণ্য যোগ করুন।</div>';
   d.rows.forEach(function (r, i) {
@@ -1731,12 +1738,12 @@ function drawDeForm() {
       '<div class="dl" id="de-sold-' + i + '"></div></div>';
   });
   h += '<select id="de-add" onchange="deAddRow(this.value)"><option value="">＋ অন্য পণ্যের ফেরত/ড্যামেজ যোগ করুন</option>' + S.products.map(function (x) { return '<option value="' + x.id + '">' + esc(x.name) + '</option>'; }).join('') + '</select></div>';
-  h += '<div class="card"><div class="ct">💰 টাকার হিসাব</div><div class="g2"><div class="fg"><label class="fl">কমিশন (৳)</label><input type="number" min="0" inputmode="decimal" value="' + esc(d.comm) + '" oninput="deSet(null,\'comm\',this.value)"></div>' +
-    '<div class="fg"><label class="fl">ছাড় (৳)</label><input type="number" min="0" inputmode="decimal" value="' + esc(d.disc) + '" oninput="deSet(null,\'disc\',this.value)"></div></div><div id="de-sum"></div>' +
-    '<div class="fg"><label class="fl">নগদ পেলাম (৳)</label><input type="number" min="0" inputmode="decimal" id="de-cash" value="' + esc(d.cash) + '" oninput="deSet(null,\'cash\',this.value)"></div>' +
+  h += '<div class="card"><div class="ct">💰 টাকার হিসাব</div><div class="g2"><div class="fg"><label class="fl">DSR / SO-র কমিশন (৳)</label><input type="number" min="0" inputmode="decimal" value="' + esc(d.comm) + '" oninput="deSet(null,\'comm\',this.value)"></div>' +
+    '<div class="fg"><label class="fl">দোকানদারকে ছাড় / ডিসকাউন্ট (৳)</label><input type="number" min="0" inputmode="decimal" value="' + esc(d.disc) + '" oninput="deSet(null,\'disc\',this.value)"></div></div><div id="de-sum"></div>' +
+    '<div class="fg"><label class="fl">নগদ টাকা জমা পেলাম (৳)</label><input type="number" min="0" inputmode="decimal" id="de-cash" value="' + esc(d.cash) + '" oninput="deSet(null,\'cash\',this.value)"></div>' +
     '<button class="btn btn-gh btn-w" style="margin-bottom:8px" onclick="deFillCash()">প্রত্যাশিত নগদই পেয়েছি</button>' +
     '<div class="fg"><label class="fl">নোট</label><input value="' + esc(d.note) + '" maxlength="200" oninput="S.de.note=this.value"></div>' +
-    '<div style="display:flex;gap:8px"><button class="btn btn-gh btn-w" onclick="S.de=null;drawSettle()">← পেছনে</button><button class="btn btn-bl btn-w" onclick="deSave()">✅ স্লিপ সেভ করুন</button></div></div>';
+    '<div style="display:flex;gap:8px"><button class="btn btn-gh btn-w" onclick="S.de=null;drawSettle()">← পেছনে</button><button class="btn btn-bl btn-w" onclick="deSave()">✅ হিসাব সেভ করুন</button></div></div>';
   $('st-body').innerHTML = h; deCalc();
 }
 function deSet(i, k, v) { if (i === null) S.de[k] = v; else S.de.rows[i][k] = v; deCalc(); }
@@ -1755,10 +1762,12 @@ function deTotals() {
 function deCalc() {
   var t = deTotals(), el = $('de-sum'); if (!el) return;
   el.innerHTML = '<div style="background:var(--bg);border:1px solid var(--bdr);border-radius:12px;padding:6px 10px;margin-bottom:10px">' +
-    row('দেওয়া (মোট)', tk(t.given)) + row('− ফেরত', tk(t.ret)) + row('− ড্যামেজ', tk(t.dmg)) + row('− কমিশন', tk(t.comm)) + row('− ছাড়', tk(t.disc)) +
+    row('মোট মাল দেওয়া হয়েছিল', tk(t.given)) + row('− ফেরত', tk(t.ret)) + row('− ড্যামেজ', tk(t.dmg)) + row('− কমিশন', tk(t.comm)) + row('− ছাড়', tk(t.disc)) +
     '<div class="dr" style="font-weight:800"><span>প্রত্যাশিত নগদ</span><span style="color:var(--bl)">' + tk(t.exp) + '</span></div>' +
-    '<div class="dr"><span>পেয়েছেন</span><b>' + tk(t.cash) + '</b></div>' +
-    '<div class="dr" style="font-weight:800"><span>স্লিপের পর বাকি থাকবে</span><span style="color:' + (t.after > 0.5 ? 'var(--re)' : 'var(--gr)') + '">' + tk(t.after) + '</span></div>' +
+    '<div class="dr"><span>নগদ জমা পেলাম</span><b>' + tk(t.cash) + '</b></div>' +
+    (t.exp - t.cash > 0.005 ? '<div class="dr"><span>ঘাটতি (এই হিসাবে কম জমা — বাকিতে যোগ হবে)</span><b style="color:var(--re)">' + tk(t.exp - t.cash) + '</b></div>' : '') +
+    (t.cash - t.exp > 0.005 ? '<div class="dr"><span>বেশি জমা (পুরনো বাকি থেকে কাটা যাবে)</span><b style="color:var(--gr)">' + tk(t.cash - t.exp) + '</b></div>' : '') +
+    '<div class="dr" style="font-weight:800"><span>এই হিসাবের পর মোট বাকি থাকবে</span><span style="color:' + (t.after > 0.5 ? 'var(--re)' : 'var(--gr)') + '">' + tk(t.after) + '</span></div>' +
     (t.exp < 0 ? '<div class="bdg b-re">⚠ প্রত্যাশিত নগদ ঋণাত্মক — ফেরত/কমিশন আবার দেখুন</div>' : '') + '</div>';
 }
 function deFillCash() { var t = deTotals(); S.de.cash = String(Math.max(0, t.exp)); $('de-cash').value = S.de.cash; deCalc(); }
@@ -1766,17 +1775,17 @@ function deSave() {
   var d = S.de, rets = [], dmgs = [];
   d.rows.forEach(function (r) { if (N(r.rc) + N(r.rp) > 0) rets.push({ productId: r.pid, cases: N(r.rc), pcs: N(r.rp) }); if (N(r.dc) + N(r.dp) > 0) dmgs.push({ productId: r.pid, cases: N(r.dc), pcs: N(r.dp) }); });
   var t = deTotals(); if (t.exp < -0.01) return toast('প্রত্যাশিত নগদ ঋণাত্মক — হিসাব মিলছে না', true);
-  if (!confirm('স্লিপ সেভ করবেন?\nপ্রত্যাশিত নগদ ' + tk(t.exp) + ' · পেয়েছেন ' + tk(t.cash) + ' · বাকি থাকবে ' + tk(t.after))) return;
+  if (!confirm('হিসাব সেভ করবেন?\nপ্রত্যাশিত নগদ ' + tk(t.exp) + ' · পেয়েছেন ' + tk(t.cash) + ' · বাকি থাকবে ' + tk(t.after))) return;
   run(function () { return POST('payments', { action: 'dayend', dsrId: d.sr.id, date: d.date, returns: rets, damages: dmgs, commission: N(d.comm), discount: N(d.disc), cash: N(d.cash), note: d.note }); }).then(function (r) {
     if (!r.ok) return toast(r.error || 'ত্রুটি', true);
     S.de = null; S.lastSlipId = r.slip.id; reloadMasters();
-    afterSaveModal('স্লিপ সেভ হয়েছে · ' + r.slip.slipNo, [['DSR/SO', esc(r.slip.dsrName)], ['প্রত্যাশিত নগদ', tk(r.slip.expectedCash)], ['নগদ পেয়েছেন', tk(r.slip.cashAmt)], ['এখন বাকি', '<span style="color:' + (r.slip.dueAfter > 0.5 ? 'var(--re)' : 'var(--gr)') + '">' + tk(r.slip.dueAfter) + '</span>']], 'printSlip(\'' + r.slip.id + '\')');
+    afterSaveModal('হিসাব সেভ হয়েছে · ' + r.slip.slipNo, [['DSR / SO', esc(r.slip.dsrName)], ['প্রত্যাশিত নগদ', tk(r.slip.expectedCash)], ['নগদ পেয়েছেন', tk(r.slip.cashAmt)], ['এখন বাকি', '<span style="color:' + (r.slip.dueAfter > 0.5 ? 'var(--re)' : 'var(--gr)') + '">' + tk(r.slip.dueAfter) + '</span>']], 'printSlip(\'' + r.slip.id + '\')');
     drawSettle();
   });
 }
-/* the printable day-end slip */
+/* the printable settlement receipt */
 function printSlip(id) {
-  run(function () { return GET('payments?' + qs({ action: 'slip', id: id })); }, 'স্লিপ তৈরি হচ্ছে...').then(function (d) {
+  run(function () { return GET('payments?' + qs({ action: 'slip', id: id })); }, 'রসিদ তৈরি হচ্ছে...').then(function (d) {
     if (!d.ok) return toast(d.error || 'ত্রুটি', true);
     var s = d.slip, M = window.MEMO, P = {}, order = [];
     function slot(r) { var k = r.productId; if (!P[k]) { P[k] = { pid: k, name: r.productName, sku: r.sku, g: 0, r: 0, d: 0 }; order.push(k); } return P[k]; }
@@ -1785,35 +1794,35 @@ function printSlip(id) {
       return [M.dg(String(i + 1).padStart(2, '0')), { h: '<span class="n">' + M.e(o.name) + '</span>' + (o.sku ? '<span class="s">SKU: ' + M.e(o.sku) + '</span>' : ''), al: 'left', cls: 'l' },
         qtyOf(o.g, k), qtyOf(o.r, k), qtyOf(o.d, k), '<b>' + (sold >= 0 ? qtyOf(sold, k) : '—') + '</b>']; });
     var cols = [{ h: '#', w: '6%' }, { h: 'পণ্যের বিবরণ', w: '34%', a: 'l' }, { h: 'দেওয়া', w: '15%' }, { h: 'ফেরত', w: '15%' }, { h: 'ড্যামেজ', w: '15%' }, { h: 'বিক্রি', w: '15%' }];
-    var cards = { t: 'html', html: '<div class="cards"><div><h3>DSR / SO</h3><div class="kv"><span>নাম:</span><b>' + M.e(s.dsrName) + '</b></div></div><div><h3>স্লিপ বিবরণ</h3><div class="kv"><span>স্লিপ নং:</span><b>' + M.e(s.slipNo) + '</b></div><div class="kv"><span>হিসাবের তারিখ:</span><b>' + M.dmy(s.date) + '</b></div></div></div>' };
+    var cards = { t: 'html', html: '<div class="cards"><div><h3>DSR / SO</h3><div class="kv"><span>নাম:</span><b>' + M.e(s.dsrName) + '</b></div></div><div><h3>রসিদের বিবরণ</h3><div class="kv"><span>রসিদ নং:</span><b>' + M.e(s.slipNo) + '</b></div><div class="kv"><span>হিসাবের তারিখ:</span><b>' + M.dmy(s.date) + '</b></div></div></div>' };
     var blocks = [cards]; if (rows.length) blocks.push(M.T(cols, rows, [{ h: 'মোট আইটেম: ' + M.int(rows.length) + ' টি', span: 6, al: 'right' }]));
     if (s.note) blocks.push(M.note('<b>নোট:</b> ' + M.e(s.note)));
     var sum = [['মোট দেওয়া (এই তারিখে)', '৳ ' + M.money(s.givenAmt)], ['− ফেরত (অবিক্রিত)', '− ৳ ' + M.money(s.returnAmt), 'g'], ['− ড্যামেজ', '− ৳ ' + M.money(s.damageAmt), 'g'],
       ['− কমিশন', '− ৳ ' + M.money(s.commAmt), 'g'], ['− ছাড়', '− ৳ ' + M.money(s.discAmt), 'g'], ['প্রত্যাশিত নগদ', '৳ ' + M.money(s.expectedCash), 'big'], ['নগদ জমা পেয়েছি', '৳ ' + M.money(s.cashAmt), 'g'],
-      s.dueAfter > 0.005 ? ['বর্তমান বাকি (এই স্লিপের পর)', '৳ ' + M.money(s.dueAfter), 'r'] : ['বর্তমান বাকি', '৳ 0.00 ✔ পরিশোধিত', 'g']];
-    M.show({ kind: 'dayend', title: 'দিনশেষ হিসাব স্লিপ', en: 'DAY-END SETTLEMENT SLIP', no: s.slipNo, date: s.createdAt || s.date, file: s.slipNo, blocks: blocks, shareText: s.dsrName + ' | নগদ ৳' + M.money(s.cashAmt) + ' | বাকি ৳' + M.money(s.dueAfter),
+      s.dueAfter > 0.005 ? ['বর্তমান বাকি (এই হিসাবের পর)', '৳ ' + M.money(s.dueAfter), 'r'] : ['বর্তমান বাকি', '৳ 0.00 ✔ পরিশোধিত', 'g']];
+    M.show({ kind: 'dayend', title: 'দিনশেষ হিসাবের রসিদ', en: 'SETTLEMENT RECEIPT', no: s.slipNo, date: s.createdAt || s.date, file: s.slipNo, blocks: blocks, shareText: s.dsrName + ' | নগদ ৳' + M.money(s.cashAmt) + ' | বাকি ৳' + M.money(s.dueAfter),
       closing: { total: s.cashAmt, words: s.cashAmt, wordsLabel: 'কথায় (নগদ জমা):', summary: sum, sigs: [['গ্রহণকারী', 'মালিক / অফিস'], ['জমাদাতা', 'DSR / SO: ' + s.dsrName], ['অনুমোদনকারী', 'মালিক']] } });
   });
 }
 
-/* ── 3. পেমেন্ট (পুরনো বাকি জমা) ── */
+/* ── 3. পুরনো বাকি জমা ── */
 function drawCash() {
   var st = S.st;
-  $('st-body').innerHTML = '<div class="card"><div class="ct">💵 পুরনো বাকি জমা নিন</div><div style="font-size:12px;color:var(--mt);margin-bottom:10px">স্লিপ ছাড়া শুধু টাকা জমা নেওয়ার জন্য (যেমন আগের কোনো বাকি পরে দিয়েছে)।</div>' +
+  $('st-body').innerHTML = '<div class="card"><div class="ct">💵 DSR / SO-র পুরনো বাকি জমা নিন</div><div style="font-size:12px;color:var(--mt);margin-bottom:10px">শুধু আগের জমে থাকা বাকির টাকা নেওয়ার জন্য। ফেরত, ড্যামেজ বা আজকের হিসাব এখানে নয় — সেগুলো <b>🧮 দিনশেষ হিসাব</b>-এ লিখুন।</div>' +
     '<div class="fg"><label class="fl">DSR / SO *</label>' + srSelect('c-sr', st.dsr) + '</div><div id="c-due" class="dl" style="margin:-4px 0 8px"></div>' +
-    '<div class="g2"><div class="fg"><label class="fl">টাকা (৳) *</label><input type="number" min="0" inputmode="decimal" id="c-amt"></div><div class="fg"><label class="fl">তারিখ</label><input type="date" id="c-date" value="' + todayStr() + '"></div></div>' +
-    '<div class="fg"><label class="fl">নোট</label><input id="c-note" maxlength="200"></div><button class="btn btn-bl btn-w" onclick="doCash()">✅ জমা নিন</button></div>';
+    '<div class="g2"><div class="fg"><label class="fl">জমার টাকা (৳) *</label><input type="number" min="0" inputmode="decimal" id="c-amt"></div><div class="fg"><label class="fl">তারিখ</label><input type="date" id="c-date" value="' + todayStr() + '"></div></div>' +
+    '<div class="fg"><label class="fl">নোট</label><input id="c-note" maxlength="200"></div><button class="btn btn-bl btn-w" onclick="doCash()">✅ বাকির টাকা জমা নিন</button></div>';
   $('c-sr').onchange = function () { S.st.dsr = this.value; var s = S.srs.filter(function (x) { return x.id === this.value; }, this)[0]; $('c-due').innerHTML = s ? 'বর্তমান বাকি: <b style="color:var(--re)">' + tk(s.due) + '</b>' : ''; };
   $('c-sr').onchange.call($('c-sr'));
 }
 function doCash() {
   var sr = $('c-sr').value, amt = N($('c-amt').value); if (!sr) return toast('DSR / SO বেছে নিন', true); if (amt <= 0) return toast('টাকার পরিমাণ দিন', true);
   run(function () { return POST('payments', { action: 'cash', dsrId: sr, cash: amt, date: $('c-date').value, note: $('c-note').value }); }).then(function (r) {
-    if (!r.ok) return toast(r.error || 'ত্রুটি', true); toast('জমা নেওয়া হয়েছে ✓ বাকি ' + tk(r.dueAfter)); reloadMasters().then(drawCash);
+    if (!r.ok) return toast(r.error || 'ত্রুটি', true); toast('বাকির টাকা জমা হয়েছে ✓ এখন বাকি ' + tk(r.dueAfter)); reloadMasters().then(drawCash);
   });
 }
 
-/* ── 4. স্লিপ তালিকা ── */
+/* ── 4. হিসাবের তালিকা ── */
 function drawSlips() {
   var st = S.st; st.sFrom = st.sFrom || addDays(todayStr(), -30); st.sTo = st.sTo || todayStr();
   $('st-body').innerHTML = '<div class="card"><div class="g2"><div class="fg"><label class="fl">থেকে</label><input type="date" id="sl-from" value="' + st.sFrom + '"></div><div class="fg"><label class="fl">পর্যন্ত</label><input type="date" id="sl-to" value="' + st.sTo + '"></div></div>' +
@@ -1823,42 +1832,42 @@ function drawSlips() {
 function loadSlips() {
   var st = S.st; st.sFrom = $('sl-from').value; st.sTo = $('sl-to').value; st.sSr = $('sl-sr').value;
   Promise.all([GET('payments?' + qs({ action: 'slips', from: st.sFrom, to: st.sTo, dsrId: st.sSr })), GET('payments?' + qs({ action: 'payments', from: st.sFrom, to: st.sTo, srId: st.sSr }))]).then(function (a) {
-    var h = '<div class="card"><div class="ct">🧾 দিনশেষ স্লিপ (' + a[0].slips.length + ')</div>';
-    if (!a[0].slips.length) h += '<div class="empty">কোনো স্লিপ নেই</div>';
+    var h = '<div class="card"><div class="ct">🧮 দিনশেষ হিসাব (' + a[0].slips.length + ')</div>';
+    if (!a[0].slips.length) h += '<div class="empty">কোনো দিনশেষ হিসাব হয়নি</div>';
     a[0].slips.forEach(function (s) {
       h += '<div class="prow"><div style="display:flex;justify-content:space-between"><b>' + esc(s.dsrName) + '</b><b style="color:var(--bl)">' + tk(s.cashAmt) + '</b></div>' +
         '<div class="dl">' + esc(s.slipNo) + ' · ' + dmy(s.date) + ' · ফেরত ' + tk(s.returnAmt) + ' · ড্যামেজ ' + tk(s.damageAmt) + ' · কমিশন ' + tk(s.commAmt) + ' · ছাড় ' + tk(s.discAmt) + '</div>' +
         '<div style="display:flex;gap:6px;align-items:center;margin-top:6px"><span class="bdg ' + (s.dueAfter > 0.5 ? 'b-re' : 'b-gr') + '">বাকি ' + tk(s.dueAfter) + '</span><span style="flex:1"></span><button class="btn btn-gh btn-sm" onclick="printSlip(\'' + s.id + '\')">🖨</button><button class="btn btn-gh btn-sm" style="color:var(--re)" onclick="delSlip(\'' + s.id + '\')">🗑</button></div></div>';
     });
     h += '</div>';
-    var lone = a[1].payments.filter(function (p) { return /পুরনো বাকি/.test(p.note) || !/দিনশেষ স্লিপ/.test(p.note); });
-    h += '<div class="card"><div class="ct">💵 শুধু নগদ জমা (' + lone.length + ')</div>' + (lone.length ? lone.map(function (p) {
+    var lone = a[1].payments.filter(function (p) { return /পুরনো বাকি/.test(p.note) || !/(দিনশেষ স্লিপ|দিনশেষ হিসাব)/.test(p.note); });
+    h += '<div class="card"><div class="ct">💵 পুরনো বাকি জমা (' + lone.length + ')</div>' + (lone.length ? lone.map(function (p) {
       return '<div class="dr"><span><b>' + esc(p.srName) + '</b><br><small style="color:var(--mt)">' + dmy(p.date) + (p.note ? ' · ' + esc(p.note) : '') + '</small></span><span style="display:flex;gap:8px;align-items:center"><b>' + tk(p.cashAmount) + '</b><button class="btn btn-gh btn-sm" style="color:var(--re)" onclick="delCashPay(\'' + p.id + '\')">🗑</button></span></div>'; }).join('') : '<div class="empty">নেই</div>') + '</div>';
     $('sl-list').innerHTML = h;
   });
 }
 function delSlip(id) {
-  confirmDelete('এই স্লিপটি মুছবেন?', function (pin) {
-    run(function () { return DEL('payments?' + qs({ action: 'slip', id: id, pin: pin })); }).then(function (r) { if (!r.ok) return toast(r.error || 'ত্রুটি', true); toast('স্লিপ মুছে ফেলা হয়েছে'); reloadMasters().then(loadSlips); });
+  confirmDelete('এই দিনশেষ হিসাবটি মুছবেন? (ফেরত মাল স্টক থেকে বাদ যাবে, বাকি আগের অবস্থায় ফিরবে)', function (pin) {
+    run(function () { return DEL('payments?' + qs({ action: 'slip', id: id, pin: pin })); }).then(function (r) { if (!r.ok) return toast(r.error || 'ত্রুটি', true); toast('হিসাব মুছে ফেলা হয়েছে'); reloadMasters().then(loadSlips); });
   });
 }
 function delCashPay(id) {
-  confirmDelete('এই নগদ জমাটি মুছবেন?', function (pin) {
+  confirmDelete('এই বাকি জমাটি মুছবেন?', function (pin) {
     run(function () { return DEL('payments?' + qs({ action: 'payment', id: id, pin: pin })); }).then(function (r) { if (!r.ok) return toast(r.error || 'ত্রুটি', true); toast('মুছে ফেলা হয়েছে'); reloadMasters().then(loadSlips); });
   });
 }
 
 /* ═════════ কোম্পানি লেনদেন ═════════ */
-RENDER.tx = function () { S.tx = S.tx || { tab: 'buy' }; drawTx(); };
+RENDER.tx = function () { S.tx = S.tx || { tab: 'buy' }; if (S.tx.tab === 'damage') S.tx.tab = 'buy'; drawTx(); };
 function txTab(t) { S.tx.tab = t; drawTx(); }
 function drawTx() {
-  var t = S.tx, h = seg([['damage', '⚠️ ড্যামেজ'], ['buy', '🛒 কেনা'], ['retco', '↩ কোম্পানিতে ফেরত'], ['claims', '💥 ড্যামেজ ক্লেইম'], ['bonus', '🎁 বোনাস / ফ্রি'], ['hist', '📋 লেনদেন তালিকা']], t.tab, 'txTab') + '<div id="tx-body"></div>';
-  $('pg-tx').innerHTML = h; ({ damage: drawDamageEntry, buy: drawBuy, retco: drawRetCo, claims: drawClaims, bonus: drawBonusClaim, hist: drawTxHist })[t.tab]();
+  var t = S.tx, h = seg([['buy', '🛒 কোম্পানি থেকে কেনা'], ['retco', '↩ কোম্পানিতে ফেরত'], ['claims', '💥 ড্যামেজ দাবি'], ['bonus', '🎁 বোনাস / ফ্রি দাবি'], ['hist', '📋 লেনদেন তালিকা']], t.tab, 'txTab') + '<div id="tx-body"></div>';
+  $('pg-tx').innerHTML = h; ({ buy: drawBuy, retco: drawRetCo, claims: drawClaims, bonus: drawBonusClaim, hist: drawTxHist })[t.tab]();
 }
 function companyForm(kind) {
   var buy = kind === 'buy'; ifInit(kind, { mode: 'buy', stock: !buy });
   $('tx-body').innerHTML = '<div class="card"><div class="ct">' + (buy ? '🛒 কোম্পানি থেকে মাল কেনা (স্টক বাড়বে)' : '↩ কোম্পানিতে মাল ফেরত (স্টক কমবে)') + '</div>' +
-    '<div class="g2"><div class="fg"><label class="fl">তারিখ</label><input type="date" id="co-date" value="' + todayStr() + '"></div><div class="fg"><label class="fl">চালান / স্লিপ নং</label><input id="co-slip" maxlength="40"></div></div>' +
+    '<div class="g2"><div class="fg"><label class="fl">তারিখ</label><input type="date" id="co-date" value="' + todayStr() + '"></div><div class="fg"><label class="fl">চালান নং</label><input id="co-slip" maxlength="40"></div></div>' +
     ifHtml(kind) + '<div class="fg" style="margin-top:8px"><label class="fl">নোট</label><input id="co-note" maxlength="200"></div>' +
     '<button class="btn btn-bl btn-w" onclick="doCompany(\'' + kind + '\')">✅ সেভ করুন</button></div>';
   ifDraw(kind);
@@ -1874,13 +1883,13 @@ function doCompany(kind) {
     afterSaveModal(kind === 'buy' ? 'মাল কেনা হয়েছে' : 'কোম্পানিতে ফেরত হয়েছে', [['মোট (কেনা দামে)', tk(r.rows.reduce(function (s, x) { return s + N(x.totalCost); }, 0))]], 'printTxMemo()');
   });
 }
-/* ── ⚠️ ড্যামেজ এন্ট্রি (কোম্পানির কাছে কেনা দামে ক্লেইম) ── */
+/* ── ⚠️ ড্যামেজ এন্ট্রি (কোম্পানির কাছে কেনা দামে দাবি) ── */
 function drawDamageEntry() {
   ifInit('dmg', { mode: 'buy', stock: true });
-  $('tx-body').innerHTML = '<div class="card"><div class="ct">⚠️ ড্যামেজ পণ্য — কেনা দামে কোম্পানির কাছে ক্লেইম হবে</div>' +
-    '<div class="ib" style="margin-bottom:8px">ড্যামেজ এন্ট্রিতে স্টক বদলায় না — এটি শুধু ক্লেইম ও ক্ষতির হিসাবে যোগ হয়।</div>' +
+  $('tx-body').innerHTML = '<div class="card"><div class="ct">⚠️ ড্যামেজ পণ্য — কেনা দামে কোম্পানির কাছে দাবি হবে</div>' +
+    '<div class="ib" style="margin-bottom:8px">ড্যামেজ এন্ট্রিতে স্টক বদলায় না — এটি শুধু দাবি ও ক্ষতির হিসাবে যোগ হয়।</div>' +
     '<div class="fg"><label class="fl">কোন DSR / SO-এর ড্যামেজ *</label>' + srSelect('dm-sr', '') + '</div>' +
-    '<div class="g2"><div class="fg"><label class="fl">তারিখ</label><input type="date" id="dm-date" value="' + (S.tx.dmDate || todayStr()) + '"></div><div class="fg"><label class="fl">স্লিপ নং (ঐচ্ছিক)</label><input id="dm-slip" maxlength="40"></div></div>' +
+    '<div class="g2"><div class="fg"><label class="fl">তারিখ</label><input type="date" id="dm-date" value="' + (S.tx.dmDate || todayStr()) + '"></div><div class="fg"><label class="fl">চালান নং (ঐচ্ছিক)</label><input id="dm-slip" maxlength="40"></div></div>' +
     ifHtml('dmg') + '<div class="fg" style="margin-top:8px"><label class="fl">নোট</label><input id="dm-note" maxlength="200"></div>' +
     '<button class="btn btn-re btn-w" onclick="doDamage()">⚠️ ড্যামেজ সেভ করুন</button></div><div id="dm-list"></div>';
   ifDraw('dmg'); $('dm-date').onchange = function () { S.tx.dmDate = this.value; loadDmList(); }; loadDmList();
@@ -1891,7 +1900,7 @@ function doDamage() {
   run(function () { return POST('transactions', { type: 'damage', srId: sr, date: $('dm-date').value, slipNo: $('dm-slip').value, note: $('dm-note').value, items: items }); }).then(function (r) {
     if (!r.ok) return toast(r.error || 'ত্রুটি', true);
     S.lastMemo = r; reloadMasters().then(drawDamageEntry);
-    afterSaveModal('ড্যামেজ রেকর্ড হয়েছে', [['কার', esc(r.srName)], ['ক্লেইম (কেনা দামে)', tk(r.rows.reduce(function (s, x) { return s + N(x.totalCost); }, 0))]], 'printTxMemo()');
+    afterSaveModal('ড্যামেজ রেকর্ড হয়েছে', [['কার', esc(r.srName)], ['দাবি (কেনা দামে)', tk(r.rows.reduce(function (s, x) { return s + N(x.totalCost); }, 0))]], 'printTxMemo()');
   });
 }
 function loadDmList() {
@@ -1901,7 +1910,7 @@ function loadDmList() {
     el.innerHTML = '<div class="card"><div class="ct">📋 ' + dmy(d) + ' তারিখের ড্যামেজ</div>' + (G.length ? G.map(function (g) { return txCard(g, 'damage'); }).join('') : '<div class="empty">এই তারিখে কোনো ড্যামেজ নেই</div>') + '</div>';
   });
 }
-/* ── তারিখ পরিসর (ড্যামেজ ক্লেইম ও বোনাস / ফ্রি ক্লেইমে একই) ── */
+/* ── তারিখ পরিসর (ড্যামেজ দাবি ও বোনাস / ফ্রি দাবিে একই) ── */
 function rangeCard(k, fn) {
   var cur = cyclePeriodNow(), b = cycleBounds(cur); S.tx[k + 'f'] = S.tx[k + 'f'] || b.start; S.tx[k + 't'] = S.tx[k + 't'] || b.end;
   return '<div class="card"><div class="fg"><label class="fl">মাস (২৬ → ২৫)</label><select id="' + k + '-per" onchange="rangeFromPeriod(\'' + k + '\')">' + periodOptions(cur, cyclePeriodFor(S.tx[k + 't'])) + '</select></div>' +
@@ -1920,7 +1929,7 @@ function loadClaims() {
     $('cl-out').innerHTML = h + '</div>';
   });
 }
-/* ── 🎁 বোনাস / ফ্রি ক্লেইম (কোম্পানির কাছে পাওনা) ── */
+/* ── 🎁 বোনাস / ফ্রি দাবি (কোম্পানির কাছে পাওনা) ── */
 function drawBonusClaim() { $('tx-body').innerHTML = rangeCard('bn', 'loadBonusClaim()') + '<div id="bn-out"></div>'; loadBonusClaim(); }
 function loadBonusClaim() {
   var f = $('bn-f').value, t = $('bn-t').value; S.tx.bnf = f; S.tx.bnt = t;
@@ -1959,7 +1968,7 @@ function loadTxHist() {
 RENDER.psale = function () { S.ps = S.ps || { tab: 'sale' }; drawPsale(); };
 function psTab(t) { S.ps.tab = t; drawPsale(); }
 function drawPsale() {
-  var t = S.ps, h = seg([['sale', '🛒 বিক্রয়'], ['ret', '↩ দোকান থেকে ফেরত'], ['hist', '📋 তালিকা']], t.tab, 'psTab') + '<div id="ps-body"></div>';
+  var t = S.ps, h = seg([['sale', '🛒 দোকানে বিক্রয়'], ['ret', '↩ দোকান থেকে ফেরত'], ['hist', '📋 তালিকা']], t.tab, 'psTab') + '<div id="ps-body"></div>';
   $('pg-psale').innerHTML = h; ({ sale: drawSale, ret: drawShopRet, hist: drawPsHist })[t.tab]();
 }
 function shopPick(idPrefix, withCustomer) {
@@ -2089,7 +2098,7 @@ function doDueAdd() {
 }
 function delDue(id, shopId) { confirmDelete('এই বাকির এন্ট্রি মুছবেন?', function (pin) { run(function () { return DEL('shops?' + qs({ action: 'due', id: id, pin: pin })); }).then(function (r) { if (!r.ok) return toast(r.error || 'ত্রুটি', true); closeModal(); toast('মুছে ফেলা হয়েছে'); reloadMasters().then(function () { shopLedger(shopId); }); }); }); }
 
-/* ═════════ বাকি আদায় ═════════ */
+/* ═════════ দোকানের বাকি আদায় ═════════ */
 RENDER.duecol = function () { return Promise.all([reloadMasters(), GET('shops?action=dues')]).then(function (a) { S.dueRows = (a[1] && a[1].dues) || []; drawDuecol(); }); };
 function drawDuecol() {
   var td = todayStr(), first = {}; S.dueRows.forEach(function (d) { var k = d.shopId || ('c:' + d.shopName); if (!first[k] || d.dueDate < first[k]) first[k] = d.dueDate; });
@@ -2107,10 +2116,10 @@ function custCollect(name, due) {
   run(function () { return POST('shops', { action: 'collect', customerName: name, amount: N(a), date: todayStr() }); }).then(function (r) { if (!r.ok) return toast(r.error || 'ত্রুটি', true); toast('আদায় হয়েছে ✓'); gTab('duecol', true); });
 }
 
-/* ═════════ ডিএসআর / এসও (শুধু নাম) ═════════ */
+/* ═════════ DSR / SO (শুধু নাম) ═════════ */
 RENDER.sr = function () { return GET('srs').then(function (r) { S.srs = r.srs || []; drawSr(); }); };
 function drawSr() {
-  var h = '<div class="card"><div class="ct">👥 DSR / SO তালিকা</div><div style="font-size:12px;color:var(--mt);margin-bottom:10px">এরা অ্যাপে লগইন করে না — শুধু নাম হিসেবে থাকে। মাল দেওয়া ও দিনশেষ স্লিপে এদের বেছে নেবেন।</div><div style="display:flex;gap:6px"><button class="btn btn-bl btn-w" onclick="srForm(\'dsr\')">＋ নতুন DSR</button><button class="btn btn-gh btn-w" onclick="srForm(\'so\')">＋ নতুন SO</button></div></div>';
+  var h = '<div class="card"><div class="ct">👥 DSR / SO তালিকা</div><div style="font-size:12px;color:var(--mt);margin-bottom:10px">এরা অ্যাপে লগইন করে না — শুধু নাম হিসেবে থাকে। মাল দেওয়া ও দিনশেষ হিসাবতে এদের বেছে নেবেন।</div><div style="display:flex;gap:6px"><button class="btn btn-bl btn-w" onclick="srForm(\'dsr\')">＋ নতুন DSR</button><button class="btn btn-gh btn-w" onclick="srForm(\'so\')">＋ নতুন SO</button></div></div>';
   ['dsr', 'so'].forEach(function (role) {
     var L = S.srs.filter(function (s) { return s.role === role; }); if (!L.length) return;
     h += '<div class="card" style="padding:4px 0"><div class="ct" style="padding:10px 14px 0">' + (role === 'dsr' ? '🚚 DSR' : '📊 SO') + ' (' + L.length + ')</div>' + L.map(function (s) {
@@ -2301,10 +2310,8 @@ function drawRep() {
   h += repTiles(t.tab);
   var p = r.profit;
   if (t.tab === 'sum') {
-    h += '<div class="card"><div class="ct">📈 লাভ-ক্ষতি</div>' + row('নিট বিক্রয় (দেওয়া + বিক্রয় − ফেরত)', tk(p.revenue)) + row('− কেনা দাম', tk(p.cost)) + '<div class="dr" style="font-weight:800"><span>মোট লাভ</span><span>' + tk(p.grossProfit) + '</span></div>' + row('− কমিশন', tk(p.commission)) +
-      '<div class="dr" style="font-weight:800;font-size:15px"><span>নিট লাভ</span><span style="color:' + (p.netProfit >= 0 ? 'var(--gr)' : 'var(--re)') + '">' + tk(p.netProfit) + '</span></div></div>' +
-      '<div class="card"><div class="ct">ℹ️ অন্যান্য হিসাব</div>' + row('ছাড় (ডিসকাউন্ট)', tk(p.discount)) + row('ড্যামেজ ক্ষতি (কেনা দামে)', tk(p.damageLoss)) + row('কোম্পানির বোনাস / ফ্রি (পাওনা)', tk(p.bonus)) + row('খরচ', tk(p.expenses)) +
-      row('ড্যামেজ ক্লেইম — অপেক্ষমাণ', tk(r.claims.pending)) + '</div>';
+    h += '<div class="card"><div class="ct">📈 লাভ-ক্ষতির পুরো হিসাব</div>' + row('নিট বিক্রয় (মাল দেওয়া + সরাসরি বিক্রয় − ফেরত)', tk(p.revenue)) + row('− কেনা দাম', tk(p.cost)) + profitWaterfall(p) + '</div>' +
+      '<div class="card"><div class="ct">ℹ️ কোম্পানির কাছে দাবির অবস্থা</div>' + row('ড্যামেজ দাবি — কোম্পানি এখনও দেয়নি', tk(r.claims.pending)) + row('ড্যামেজ দাবি — কোম্পানি দিয়ে দিয়েছে', tk(r.claims.cleared)) + row('বোনাস / ফ্রি — মোট পাওনা', tk(p.bonus)) + '</div>';
     if (r.expenses.length) h += '<div class="card"><div class="ct">💰 খরচের খাত</div>' + r.expenses.map(function (e) { return row(esc(e.category), tk(e.amount)); }).join('') + '</div>';
   } else if (t.tab === 'prod') {
     h += '<div class="card" style="padding:0"><div class="ct" style="padding:12px 14px 0">📦 পণ্যওয়ারি</div>' + (r.byProduct.map(function (x) { var net = x.net;
@@ -2366,7 +2373,7 @@ RENDER.settings = function () {
   var hub = [['setGo(\'st-card-pin\')', 'key', 'h3', 'পাসওয়ার্ড', 'PIN পরিবর্তন'], ['gTab(\'numbers\')', 'phone', 'h4', 'গুরুত্বপূর্ণ নম্বর', 'যোগাযোগ তালিকা'],
     ['gTab(\'exp\')', 'wallet', 'h2', 'খরচ', 'খরচের খাত ও হিসাব'], ['setGo(\'st-card-reset\')', 'trash', 'h5', 'রিসেট সেন্টার', 'ডেটা রিসেট']];
   var h = '<div class="ct">⚙ সেটিং</div><div class="hub">' + hub.map(function (t) { return '<button class="hub-t ' + t[2] + '" onclick="' + t[0] + '">' + axIcon(t[1]) + '<div><b>' + t[3] + '</b><br><small>' + t[4] + '</small></div></button>'; }).join('') + '</div>';
-  h += '<div class="card"><div class="ct">🏢 ব্যবসার তথ্য (স্লিপ ও মেমোতে ছাপা হয়)</div>' +
+  h += '<div class="card"><div class="ct">🏢 ব্যবসার তথ্য (মেমো ও রসিদে ছাপা হয়)</div>' +
     '<div class="fg"><label class="fl">ব্যবসার নাম</label><input id="st-name" maxlength="100" value="' + esc(S.shopName) + '"></div><div class="fg"><label class="fl">ঠিকানা</label><input id="st-addr" maxlength="200" value="' + esc(S.shopAddress) + '"></div>' +
     '<div class="g2"><div class="fg"><label class="fl">মোবাইল</label><input id="st-phone" maxlength="40" value="' + esc(S.shopPhone) + '"></div><div class="fg"><label class="fl">ডিস্ট্রিবিউটর / মালিকের নাম</label><input id="st-dist" maxlength="100" value="' + esc(S.distributorName) + '"></div></div>' +
     '<div class="fg"><label class="fl">লোগো লেখা (২-৩ অক্ষর, যেমন: AX)</label><input id="st-logo" maxlength="14" value="' + esc(S.logoText) + '"></div>' +
@@ -2390,7 +2397,7 @@ function changePin() {
 function doReset() {
   var keys = Array.prototype.map.call(document.querySelectorAll('.rs-chk:checked'), function (x) { return x.value; }); if (!keys.length) return toast('কী মুছবেন বেছে নিন', true);
   if (!confirm('নিশ্চিত? নির্বাচিত ডেটা চিরতরে মুছে যাবে। ফিরিয়ে আনা যাবে না।')) return;
-  askPin('রিসেট নিশ্চিত করতে Owner PIN দিন', function (pin) { run(function () { return POST('settings', { type: 'reset', pin: pin, what: keys }); }, 'মোছা হচ্ছে...').then(function (r) { if (!r.ok) return toast(r.error || 'ত্রুটি', true); toast('মুছে ফেলা হয়েছে'); reloadMasters().then(function () { gTab('dash', true); }); }); });
+  askPin('রিসেট নিশ্চিত করতে মালিকের পিন দিন', function (pin) { run(function () { return POST('settings', { type: 'reset', pin: pin, what: keys }); }, 'মোছা হচ্ছে...').then(function (r) { if (!r.ok) return toast(r.error || 'ত্রুটি', true); toast('মুছে ফেলা হয়েছে'); reloadMasters().then(function () { gTab('dash', true); }); }); });
 }
 
 /* ═════════ boot ═════════ */
@@ -3241,8 +3248,8 @@ body{font-family:'Inter','Noto Sans','Noto Sans Bengali','Hind Siliguri',sans-se
     damage: { title: 'ড্যামেজ পণ্য মেমো', en: 'DAMAGE MEMO', party: 'ড্যামেজ জমাদাতা', meta: 'ড্যামেজ বিবরণ', sigs: [['গ্রহণকারী', 'গুদাম / অফিস'], ['জমাদাতা', 'DSR / SO'], ['অনুমোদনকারী', 'মালিক']] },
     buy: { title: 'ক্রয় মেমো', en: 'PURCHASE MEMO', party: 'সরবরাহকারী (কোম্পানি)', meta: 'ক্রয় বিবরণ', sigs: [['গ্রহণকারী', 'গুদাম'], ['সরবরাহকারীর প্রতিনিধি', ''], ['অনুমোদনকারী', 'মালিক']], price: 'purchase' },
     return_company: { title: 'কোম্পানিতে ফেরত মেমো', en: 'RETURN TO COMPANY MEMO', party: 'গ্রহণকারী (কোম্পানি)', meta: 'ফেরত বিবরণ', sigs: [['প্রদানকারী', 'গুদাম'], ['কোম্পানির প্রতিনিধি', ''], ['অনুমোদনকারী', 'মালিক']], price: 'purchase' },
-    point_sale: { title: 'পয়েন্ট সেল মেমো', en: 'POINT SALE MEMO', party: 'ক্রেতা / কাস্টমার', meta: 'বিক্রয় বিবরণ', sigs: [['বিক্রেতা', ''], ['ক্রেতা', 'কাস্টমার'], ['অনুমোদনকারী', 'মালিক']] },
-    point_return: { title: 'পয়েন্ট সেল ফেরত মেমো', en: 'POINT RETURN MEMO', party: 'ফেরতদাতা / কাস্টমার', meta: 'ফেরত বিবরণ', sigs: [['গ্রহণকারী', ''], ['ফেরতদাতা', 'কাস্টমার'], ['অনুমোদনকারী', 'মালিক']] },
+    point_sale: { title: 'সরাসরি বিক্রয় মেমো', en: 'POINT SALE MEMO', party: 'ক্রেতা / কাস্টমার', meta: 'বিক্রয় বিবরণ', sigs: [['বিক্রেতা', ''], ['ক্রেতা', 'কাস্টমার'], ['অনুমোদনকারী', 'মালিক']] },
+    point_return: { title: 'সরাসরি বিক্রয় ফেরত মেমো', en: 'POINT RETURN MEMO', party: 'ফেরতদাতা / কাস্টমার', meta: 'ফেরত বিবরণ', sigs: [['গ্রহণকারী', ''], ['ফেরতদাতা', 'কাস্টমার'], ['অনুমোদনকারী', 'মালিক']] },
     order: { title: 'অর্ডার মেমো', en: 'SO ORDER MEMO', party: 'অর্ডারকারী (SO)', meta: 'অর্ডার বিবরণ', sigs: [['অর্ডারকারী', 'SO'], ['যাচাইকারী', 'ম্যানেজার'], ['অনুমোদনকারী', 'মালিক']] }
   };
 
@@ -3301,7 +3308,7 @@ body{font-family:'Inter','Noto Sans','Noto Sans Bengali','Hind Siliguri',sans-se
     var cards = { t: 'html', html: '<div class="cards"><div><h3>ক্রেতা ও প্রতিষ্ঠানের বিবরণ (Bill To)</h3>'
         + [['দোকানের নাম:', '<b style="font-size:13px">' + e(o.shopName) + '</b>'], o.shopNo ? ['দোকান নং:', e(o.shopNo)] : null, o.owner ? ['স্বত্বাধিকারী:', e(o.owner)] : null, o.shopPhone ? ['মোবাইল:', e(dg(o.shopPhone))] : null, o.shopAddr ? ['ঠিকানা:', e(o.shopAddr)] : null].filter(Boolean).map(function (r) { return '<div class="kv"><span>' + r[0] + '</span><b>' + r[1] + '</b></div>'; }).join('')
         + '</div><div><h3>ডেলিভারি ও বিক্রয় বিবরণ (Order Meta)</h3>'
-        + [['বিক্রয় প্রতিনিধি (DSR):', e(o.dsrName)], o.route ? ['রুট / এলাকা:', e(o.route)] : null, ['পেমেন্ট মাধ্যম:', remain > 0 ? '<span style="background:#b45309;color:#fff;border-radius:99px;padding:1px 10px;font-size:10.5px">আংশিক / বাকি</span>' : '<span style="background:linear-gradient(90deg,#059669,#0d9488);color:#fff;border-radius:99px;padding:1px 10px;font-size:10.5px">নগদ ক্যাশ (Cash Sale)</span>']].filter(Boolean).map(function (r) { return '<div class="kv"><span>' + r[0] + '</span><b>' + r[1] + '</b></div>'; }).join('')
+        + [['বিক্রয় প্রতিনিধি (DSR):', e(o.dsrName)], o.route ? ['রুট / এলাকা:', e(o.route)] : null, ['পরিশোধের ধরন:', remain > 0 ? '<span style="background:#b45309;color:#fff;border-radius:99px;padding:1px 10px;font-size:10.5px">আংশিক / বাকি</span>' : '<span style="background:linear-gradient(90deg,#059669,#0d9488);color:#fff;border-radius:99px;padding:1px 10px;font-size:10.5px">নগদ ক্যাশ (Cash Sale)</span>']].filter(Boolean).map(function (r) { return '<div class="kv"><span>' + r[0] + '</span><b>' + r[1] + '</b></div>'; }).join('')
         + '</div></div>' };
     var foot = [{ h: 'সর্বমোট অর্ডারের পরিমাণ:', span: 2, al: 'right' }, { h: cpTot(R), al: 'center' }, { h: 'সাব-টোটাল:', al: 'right' }, { h: '৳ ' + money(R.tAmt), al: 'right' }];
     var gross = o.gross != null ? Number(o.gross) : R.tAmt;

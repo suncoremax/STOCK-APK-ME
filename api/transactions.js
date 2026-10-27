@@ -34,6 +34,8 @@ module.exports = async (req, res) => {
       const d = req.body || {};
       const type = String(d.type || '');
       if (!TYPES.includes(type)) return res.json({ ok: false, error: 'ভুল ধরন' });
+      // DSR / SO damage must go through the settlement (দিনশেষ হিসাব) so his due is reduced and the claim is created together.
+      if (type === 'damage') return res.json({ ok: false, error: 'DSR / SO-র ড্যামেজ আলাদা লেখা যাবে না — "মাল দেওয়া ও দিনশেষ হিসাব → দিনশেষ হিসাব" থেকে লিখুন, তাহলেই তার বাকি ও কোম্পানির দাবি একসাথে ঠিক হবে' });
       const date = DATE_RE.test(d.date || '') ? d.date : today();
       let srId = '', srName = '';
       if (NEEDS_SR[type]) {
@@ -74,10 +76,10 @@ module.exports = async (req, res) => {
       const type = rows[0].type;
       if (!TYPES.includes(type)) return res.json({ ok: false, error: 'এটি এখান থেকে মোছা যাবে না (দোকান বিক্রয় থেকে মুছুন)' });
       const { data: slip } = await supabase.from('dayend_slips').select('slip_no').or('return_tx_id.eq.' + txId + ',damage_tx_id.eq.' + txId).limit(1);
-      if (slip && slip.length) return res.json({ ok: false, error: 'এটি দিনশেষ স্লিপ ' + slip[0].slip_no + '-এর অংশ — স্লিপ তালিকা থেকে স্লিপটি মুছুন' });
+      if (slip && slip.length) return res.json({ ok: false, error: 'এটি হিসাব ' + slip[0].slip_no + '-এর অংশ — হিসাবের তালিকা থেকে হিসাবটি মুছুন' });
       if (type === 'damage') {
         const { data: cl } = await supabase.from('dmg_claims').select('status').eq('tx_id', txId);
-        if ((cl || []).some(c => c.status === 'cleared')) return res.json({ ok: false, error: 'এই ড্যামেজের ক্লেইম কোম্পানি থেকে নিষ্পত্তি হয়ে গেছে — মোছা যাবে না' });
+        if ((cl || []).some(c => c.status === 'cleared')) return res.json({ ok: false, error: 'এই ড্যামেজের দাবি কোম্পানি থেকে নিষ্পত্তি হয়ে গেছে — মোছা যাবে না' });
       }
       const err = await reverseStock(rows, await blockNegativeStock());
       if (err) return res.json({ ok: false, error: err });

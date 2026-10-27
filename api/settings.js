@@ -12,9 +12,9 @@ const DEFAULT_CATS = ['গাড়ি ভাড়া', 'বেতন', 'অফ
 // Products, DSR/SO names, shops, contacts, expense categories and settings are NEVER touched.
 const RESET = {
   transactions: { label: 'লেনদেন (দেওয়া, ফেরত, ড্যামেজ, কেনা, বিক্রয়) — স্টক ০ হবে', tables: ['transactions'] },
-  slips:        { label: 'দিনশেষ স্লিপ ও DSR পেমেন্ট',                              tables: ['dayend_slips', 'sr_payments'] },
+  slips:        { label: 'দিনশেষ হিসাব ও DSR / SO-র বাকি জমা',                              tables: ['dayend_slips', 'sr_payments'] },
   dues:         { label: 'দোকানের বাকি ও আদায়',                                   tables: ['due_collections', 'due_calendar'] },
-  claims:       { label: 'ড্যামেজ ক্লেইম ও বোনাস রেকর্ড',                            tables: ['dmg_claims', 'bonus'] },
+  claims:       { label: 'ড্যামেজ দাবি ও বোনাস রেকর্ড',                            tables: ['dmg_claims', 'bonus'] },
   expenses:     { label: 'খরচের রেকর্ড',                                           tables: ['exp_records'] }
 };
 const settingsOut = (r) => ({ shopName: r.shop_name || '', shopAddress: r.shop_address || '', shopPhone: r.shop_phone || '', distributorName: r.distributor_name || '',
@@ -92,7 +92,7 @@ module.exports = async (req, res) => {
         const keys = (Array.isArray(d.what) ? d.what : []).filter(k => RESET[k]);
         if (!keys.length) return res.json({ ok: false, error: 'কী মুছবেন বেছে নিন' });
         if (keys.includes('transactions') && !keys.includes('slips'))   // slips point at transactions — never leave them dangling
-          return res.json({ ok: false, error: 'লেনদেন মুছলে "দিনশেষ স্লিপ ও পেমেন্ট"-ও মুছতে হবে, নইলে হিসাব মিলবে না' });
+          return res.json({ ok: false, error: 'লেনদেন মুছলে "দিনশেষ হিসাব ও বাকি জমা"-ও মুছতে হবে, নইলে হিসাব মিলবে না' });
         for (const k of keys) for (const t of RESET[k].tables) {
           const { error } = await supabase.from(t).delete().not('id', 'is', null); if (error) throw error;
         }

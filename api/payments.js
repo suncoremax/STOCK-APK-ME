@@ -58,7 +58,7 @@ module.exports = async (req, res) => {
       }
       if (action === 'slip') {
         const { data: s } = await supabase.from('dayend_slips').select('*').eq('id', String(q.id || '')).maybeSingle();
-        if (!s) return res.json({ ok: false, error: 'স্লিপ পাওয়া যায়নি' });
+        if (!s) return res.json({ ok: false, error: 'হিসাব পাওয়া যায়নি' });
         const ids = [s.return_tx_id, s.damage_tx_id].filter(Boolean);
         const { data: tx } = ids.length ? await supabase.from('transactions').select('*').in('tx_id', ids) : { data: [] };
         const { data: giv } = await supabase.from('transactions').select('*').eq('type', 'give').eq('sr_id', s.dsr_id).eq('date', s.date);
@@ -100,7 +100,7 @@ module.exports = async (req, res) => {
       const comm = money(d.commission), disc = money(d.discount), cash = money(d.cash);
       const retItems = (d.returns || []).filter(i => num(i.cases) + num(i.pcs) > 0);
       const dmgItems = (d.damages || []).filter(i => num(i.cases) + num(i.pcs) > 0);
-      if (!retItems.length && !dmgItems.length && !comm && !disc && !cash) return res.json({ ok: false, error: 'স্লিপে কিছু লেখা হয়নি' });
+      if (!retItems.length && !dmgItems.length && !comm && !disc && !cash) return res.json({ ok: false, error: 'হিসাবে কিছু লেখা হয়নি' });
 
       let ret = { ok: true, lines: [] }, dmg = { ok: true, lines: [] };
       if (retItems.length) ret = await priceItems(retItems, { type: 'return', srId: sr.id, date });
@@ -116,12 +116,12 @@ module.exports = async (req, res) => {
       const { due: dueBefore } = await dueOf(sr.id);
       const payTotal = r2(cash + comm + disc + damageAmt);
       if (r2(returnAmt + payTotal) > dueBefore + 0.01)
-        return res.json({ ok: false, error: 'হিসাব বাকির চেয়ে বেশি হয়ে গেছে — বাকি ৳' + dueBefore + ', স্লিপ মিলে ৳' + r2(returnAmt + payTotal) + '। ফেরত/ড্যামেজ/কমিশন/ছাড়/নগদ আবার দেখুন' });
+        return res.json({ ok: false, error: 'হিসাব বাকির চেয়ে বেশি হয়ে গেছে — বাকি ৳' + dueBefore + ', এই হিসাবে মোট ৳' + r2(returnAmt + payTotal) + '। ফেরত/ড্যামেজ/কমিশন/ছাড়/নগদ আবার দেখুন' });
 
       const now = new Date().toISOString();
       const retTx = crypto.randomUUID(), dmgTx = crypto.randomUUID();
-      const baseR = { tx_id: retTx, type: 'return', sr_id: sr.id, sr_name: sr.name, date, slip_no: '', note: 'দিনশেষ স্লিপ', created_at: now };
-      const baseD = { tx_id: dmgTx, type: 'damage', sr_id: sr.id, sr_name: sr.name, date, slip_no: '', note: 'দিনশেষ স্লিপ', created_at: now };
+      const baseR = { tx_id: retTx, type: 'return', sr_id: sr.id, sr_name: sr.name, date, slip_no: '', note: 'দিনশেষ হিসাব', created_at: now };
+      const baseD = { tx_id: dmgTx, type: 'damage', sr_id: sr.id, sr_name: sr.name, date, slip_no: '', note: 'দিনশেষ হিসাব', created_at: now };
       const payload = {
         slip: { dsr_id: sr.id, dsr_name: sr.name, date, given_amt: givenAmt, return_amt: returnAmt, damage_amt: damageAmt, comm_amt: comm, disc_amt: disc,
           expected_cash: expected, cash_amt: cash, due_before: dueBefore, due_after: r2(dueBefore - returnAmt - payTotal), note: str(d.note, 300),
@@ -131,7 +131,7 @@ module.exports = async (req, res) => {
         claims: dmg.lines.map(l => ({ tx_id: dmgTx, product_id: l.productId, product_name: l.productName, sku: l.sku, total_units: l.units,
           purchase_price: l.purchasePrice, total_cost: l.cost, date, sr_id: sr.id, sr_name: sr.name, created_at: now })),
         payment: payTotal > 0 ? { sr_id: sr.id, sr_name: sr.name, date, amount: payTotal, cash_amount: cash, commission_amt: comm, discount_amt: disc,
-          damage_amt: damageAmt, note: 'দিনশেষ স্লিপ', created_at: now } : null
+          damage_amt: damageAmt, note: 'দিনশেষ হিসাব', created_at: now } : null
       };
       const { data, error } = await supabase.rpc('save_day_end', { p: payload });
       if (error) throw error;
@@ -146,7 +146,7 @@ module.exports = async (req, res) => {
         if (!(await needPin(req, res, q.pin))) return;
         const id = String(q.id || '');
         const { data: used } = await supabase.from('dayend_slips').select('slip_no').eq('payment_id', id).limit(1);
-        if (used && used.length) return res.json({ ok: false, error: 'এটি স্লিপ ' + used[0].slip_no + '-এর অংশ — স্লিপ মুছুন' });
+        if (used && used.length) return res.json({ ok: false, error: 'এটি হিসাব ' + used[0].slip_no + '-এর অংশ — হিসাবের তালিকা থেকে হিসাবটি মুছুন' });
         const { error } = await supabase.from('sr_payments').delete().eq('id', id);
         if (error) throw error;
         await auditLog(OWNER, 'delete', 'sr_payments', id, null, null);
@@ -155,10 +155,10 @@ module.exports = async (req, res) => {
       if (q.action !== 'slip') return res.json({ ok: false, error: 'Unknown action' });
       if (!(await needPin(req, res, q.pin))) return;
       const { data: s } = await supabase.from('dayend_slips').select('*').eq('id', String(q.id || '')).maybeSingle();
-      if (!s) return res.json({ ok: false, error: 'স্লিপ পাওয়া যায়নি' });
+      if (!s) return res.json({ ok: false, error: 'হিসাব পাওয়া যায়নি' });
       if (s.damage_tx_id) {
         const { data: cl } = await supabase.from('dmg_claims').select('status').eq('tx_id', s.damage_tx_id);
-        if ((cl || []).some(c => c.status === 'cleared')) return res.json({ ok: false, error: 'এই স্লিপের ড্যামেজ ক্লেইম কোম্পানি থেকে নিষ্পত্তি হয়ে গেছে — মোছা যাবে না' });
+        if ((cl || []).some(c => c.status === 'cleared')) return res.json({ ok: false, error: 'এই হিসাবের ড্যামেজ দাবি কোম্পানি থেকে নিষ্পত্তি হয়ে গেছে — মোছা যাবে না' });
       }
       if (s.return_tx_id) {
         const { data: rows } = await supabase.from('transactions').select('*').eq('tx_id', s.return_tx_id);

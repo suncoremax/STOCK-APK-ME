@@ -22,6 +22,7 @@ async function period(from, to) {
     from, to, given: r2(give), returned: r2(ret), damage: r2(dmg), pointSale: r2(sales.outRev - give),
     sale: r2(sales.outRev - sales.inRev), commission: profit.commission, discount: profit.discount, damageLoss: profit.damageLoss,
     bonus: profit.bonus, expenses: profit.expenses, grossProfit: profit.grossProfit, netProfit: profit.netProfit,
+    damageRev: profit.damageRev, finalProfit: profit.finalProfit,
     cashDsr: r2(cashDsr), cashShop: r2(cashShopSale + cashShopCol), cashTotal: r2(cashDsr + cashShopSale + cashShopCol),
     cases: caseT
   };

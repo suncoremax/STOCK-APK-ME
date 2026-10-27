@@ -442,9 +442,16 @@ async function getProfitExtras(from, to) {
   }
 }
 
+// Value (at the price the DSR/SO was charged) of damaged goods written off on day-end settlements.
+// That money was never collected, yet the sale was counted in gross profit — so it must be taken back out.
+async function getDamageRevenue(from, to) {
+  const rows = await fetchAll(() => supabase.from('transactions').select('total_revenue').eq('type', 'damage').gte('date', from).lte('date', to));
+  return (rows || []).reduce((s, r) => s + num(r.total_revenue), 0);
+}
+
 async function computeProfit(from, to) {
-  const [sales, extras, bonusRows, rules] = await Promise.all([
-    getSalesSummary(from, to), getProfitExtras(from, to), computeBonusRangeSummary(from, to), getProfitRules()
+  const [sales, extras, bonusRows, rules, damageRev] = await Promise.all([
+    getSalesSummary(from, to), getProfitExtras(from, to), computeBonusRangeSummary(from, to), getProfitRules(), getDamageRevenue(from, to)
   ]);
   const r2_ = n => Math.round((num(n) + Number.EPSILON) * 100) / 100;
   const revenue = sales.outRev - sales.inRev;
@@ -457,8 +464,13 @@ async function computeProfit(from, to) {
     - (rules.damage     ? extras.damageLoss : 0)
     - (rules.bonus      ? bonus             : 0)
     - (rules.expenses   ? extras.expenses   : 0);
+  // FINAL result of the business for the period — everything counted:
+  //   gross profit − commission − discount − damaged goods the DSR was credited for (never collected)
+  //   + damage claim receivable from the company (at buying price) + bonus/free receivable from the company − expenses
+  const finalProfit = grossProfit - extras.commission - extras.discount - damageRev + extras.damageLoss + bonus - extras.expenses;
   return {
     from, to, rules,
+    damageRev: r2_(damageRev), finalProfit: r2_(finalProfit),
     revenue: r2_(revenue), cost: r2_(cost), grossProfit: r2_(grossProfit),
     commission: r2_(extras.commission), discount: r2_(extras.discount), damageLoss: r2_(extras.damageLoss),
     bonus: r2_(bonus), expenses: r2_(extras.expenses),
