@@ -1,3 +1,9 @@
+# SETUP — NEW INSTALL (Beta 1)
+
+**One SQL file only: `schema.sql`.** Run it once in the Supabase SQL Editor on a new, empty project. It is the complete database (tables, functions, price history, company deposits / receipts, photo bucket, owner login PIN 12345). No migration files are needed. Then set `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` (service_role) in Vercel, deploy, log in with 12345 and choose your own PIN. (Old upgrade notes further below are for old databases only.)
+
+---
+
 # AXIION DMS — Multi-Business Edition · Deployment
 
 One owner, one PIN, **many businesses**. After the PIN the app shows your businesses; tapping one opens the full app for
