@@ -57,40 +57,49 @@ async function needPin(req, res, pin) {
   return false;
 }
 
-// ═══════════════ business selection ═══════════════
-// The browser sends the chosen business in the X-Business-Id header. withBiz() wraps a handler:
-// it checks the session, checks that the business really exists, loads its month-cycle day and then runs
-// the handler inside that business's context — from then on every database call is scoped to it (see db.js).
+// ═══════════════ the ONE business (single-business edition) ═══════════════
+// This edition runs exactly one business. The browser no longer chooses one: withBiz() finds (or, on the very first
+// login, creates) THE business and runs the handler inside its context — from then on every database call is scoped to it
+// (see db.js). The tables keep their business_id column so the data layout stays identical to the multi-business edition.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const bizCache = new Map();      // id → { at, row }  (20 s: saves a query on every request; rename / delete clears it at once on this server)
-const bizInflight = new Map();   // id → promise: requests that arrive together (the app fires 4–7 at start) share ONE lookup
-async function loadBusiness(id) {
-  const hit = bizCache.get(id);
-  if (hit && Date.now() - hit.at < 20000) return hit.row;
-  if (bizInflight.has(id)) return bizInflight.get(id);
-  const p = (async () => {
-    const { data, error } = await rawSupabase.from('businesses').select('id,name,cycle_start_day').eq('id', id).maybeSingle();
-    if (error) throw error;
-    bizCache.set(id, { at: Date.now(), row: data || null });
-    return data || null;
+const BIZ_TTL = 60000;                 // the business row (name / month cycle) is re-read at most once a minute per server instance
+let bizCache = null;                   // { at, row }
+let bizInflight = null;                // one shared lookup for requests that arrive together (the app fires 4–7 at once)
+const DEFAULT_NAME = 'আমার ব্যবসা';
+async function ensureBusiness() {
+  if (bizCache && Date.now() - bizCache.at < BIZ_TTL) return bizCache.row;
+  if (bizInflight) return bizInflight;
+  bizInflight = (async () => {
+    const pick = async () => {
+      const { data, error } = await rawSupabase.from('businesses').select('id,name,cycle_start_day,created_at').order('created_at').limit(1);
+      if (error) throw error;
+      return (data && data[0]) || null;
+    };
+    let row = await pick();
+    if (!row) {   // first ever login: create the business (and its settings row); the app then asks for the month cycle
+      const ins = await rawSupabase.from('businesses').insert({ name: DEFAULT_NAME }).select('id,name,cycle_start_day,created_at').single();
+      if (ins.error) { row = await pick(); if (!row) throw ins.error; }   // a parallel request created it first
+      else {
+        row = ins.data;
+        await rawSupabase.from('app_settings').insert({ business_id: row.id, shop_name: row.name });
+      }
+    }
+    bizCache = { at: Date.now(), row };
+    return row;
   })();
-  bizInflight.set(id, p);
-  try { return await p; } finally { bizInflight.delete(id); }
+  try { return await bizInflight; } finally { bizInflight = null; }
 }
-function forgetBusiness(id) { if (id) bizCache.delete(String(id)); else bizCache.clear(); }
+function forgetBusiness() { bizCache = null; }
 function withBiz(handler) {
   return async (req, res) => {
     if (req.method === 'OPTIONS') return handler(req, res);
     const h = String((req.headers && (req.headers.authorization || req.headers.Authorization)) || '');
-    if (!readToken(h.replace(/^Bearer\s+/i, ''))) return handler(req, res);   // the handler's own requireAuth answers 401
-    const id = String((req.headers && (req.headers['x-business-id'] || req.headers['X-Business-Id'])) || '').trim();
-    if (!UUID_RE.test(id)) return res.json({ ok: false, noBusiness: true, error: 'আগে একটি ব্যবসা বেছে নিন' });
-    let biz;
-    try { biz = await loadBusiness(id); } catch (e) { return res.json({ ok: false, error: 'ডাটাবেসে সংযোগ হচ্ছে না — আবার চেষ্টা করুন' }); }
-    if (!biz) return res.json({ ok: false, noBusiness: true, error: 'এই ব্যবসাটি আর নেই — আবার বেছে নিন' });
-    // v14 — ROLE SAFETY: anyone who is not owner / manager gets every response scrubbed of profit, buy price, offer and ledger figures
     const tk = readToken(h.replace(/^Bearer\s+/i, ''));
-    if (tk && !['owner', 'manager'].includes(String(tk.u).toLowerCase())) {
+    if (!tk) return handler(req, res);   // the handler's own requireAuth answers 401
+    let biz;
+    try { biz = await ensureBusiness(); } catch (e) { return res.json({ ok: false, error: 'ডাটাবেসে সংযোগ হচ্ছে না — আবার চেষ্টা করুন' }); }
+    // v14 — ROLE SAFETY: anyone who is not owner / manager gets every response scrubbed of profit, buy price, offer and ledger figures
+    if (!['owner', 'manager'].includes(String(tk.u).toLowerCase())) {
       const { scrub } = require('./profit'); const j = res.json.bind(res);
       res.json = (b) => j(scrub(b));
     }
@@ -98,4 +107,4 @@ function withBiz(handler) {
   };
 }
 
-module.exports = { withBiz, forgetBusiness, UUID_RE, SETUP_PIN, validPin, hashPin, signToken, readToken, requireAuth, verifyOwnerPin, needPin };
+module.exports = { withBiz, ensureBusiness, forgetBusiness, UUID_RE, SETUP_PIN, validPin, hashPin, signToken, readToken, requireAuth, verifyOwnerPin, needPin };

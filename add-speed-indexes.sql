@@ -1,4 +1,4 @@
--- OPTIONAL — for a database created BEFORE this version. Safe to run any time, any number of times.
+-- OPTIONAL — for a database that was created BEFORE this version. Safe to run any time, any number of times.
 -- Makes history lists and the home screen faster. (A brand-new install already gets these from schema.sql.)
 -- SPEED: history lists read newest-first; the home screen counts "old lines not yet frozen" (partial index = empty once frozen → instant)
 CREATE INDEX IF NOT EXISTS idx_tx_biz_created  ON transactions(business_id, created_at DESC);

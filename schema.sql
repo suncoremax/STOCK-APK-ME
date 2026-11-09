@@ -1,14 +1,14 @@
 -- ═══════════════════════════════════════════════════════════════════
--- AXIION DMS — MULTI-BUSINESS EDITION  ·  schema.sql
+-- AXIION DMS — SINGLE-BUSINESS EDITION  ·  schema.sql
 --
 --   ONE file = the complete database (all migrations v6 / v7 / v10 / v11 are already merged in). Run it ONCE in the Supabase SQL
 --   editor on a brand-new, empty project. It creates:
 --     tables · indexes · functions · triggers · security policies ·
 --     the public "thumbs" photo bucket (no products — you add your own) ·
 --     the single Owner login (PIN 12345, must be changed at first login).
---   One owner can run MANY businesses: every table carries business_id, so each business's
---   data (stock, DSR/SO, shops, dues, reports, settings, numbering) is completely separate.
---   No business exists after this script — the owner adds them from the app (সংযোজন: ব্যবসা যোগ করুন).
+--   This edition runs exactly ONE business. The tables keep their business_id column (same data layout as the
+--   multi-business edition) but a unique index below makes a second business impossible.
+--   The one business is created automatically at the first login (name "আমার ব্যবসা", rename it in সেটিং).
 --
 --   ⚠ It DROPS and re-creates every table it owns. It refuses to run
 --     if the database already holds transactions, staff or shops, so
@@ -52,6 +52,8 @@ CREATE TABLE businesses (
   cycle_start_day INTEGER     CHECK (cycle_start_day BETWEEN 1 AND 28),   -- month cycle: the month starts on this day (26 → 26th…25th, 1 → calendar month). Set by the owner when the business is created.
   created_at      TIMESTAMPTZ DEFAULT NOW()
 );
+-- SINGLE-BUSINESS EDITION: the constant expression makes every row collide with every other → at most ONE row, ever.
+CREATE UNIQUE INDEX one_business_only ON businesses ((TRUE));
 -- running numbers per business: DSR-1 / SO-1, SHOP-0001, SL-000001 … each business counts from 1
 CREATE TABLE biz_counters (
   business_id UUID    NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,

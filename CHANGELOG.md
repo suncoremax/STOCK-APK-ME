@@ -1,18 +1,22 @@
 # CHANGELOG
 
-## v14.1.0 — Pagination + speed (multi-business edition, business features unchanged)
+## v15.0.0 — Single-business edition + speed / paging
+**One business only.** Same app, same data layout; the business list, add, delete and switch are gone.
+- `schema.sql`: unique index `one_business_only` → a second business is impossible. The business is created automatically at the first login; the app asks for its name + month cycle once (saved in `businesses`; the memo print name follows it the first time only).
+- `api/_lib/auth.js`: `ensureBusiness()` replaces the per-request business lookup — cached 60 s, one shared lookup for simultaneous requests, first-login creation is race-safe. `withBiz` ignores `X-Business-Id`. `api/auth.js`: login and `GET` return `business`; `biz-add` / `biz-del` are refused; `biz-update` renames / changes the cycle.
+- Front end: PIN → straight into the app (the login answer already carries the business, so the extra "list" request is gone); removed the hub screen, 🏢 header button and menu item.
+
 **Pagination**
 - Server: list endpoints used `.limit(1500…5000)`, which Supabase silently cuts to **1000** rows (history, DSR slips, DSR payments, expenses). New `fetchUpTo()` pages in 1000-row steps so the limit is real. Memo reprint now asks for that one memo (`transactions?txId=`) instead of downloading 5000 rows and filtering in the browser.
 - Screens: shops, দিনশেষ হিসাব, লেনদেনের ইতিহাস, দোকানে বিক্রয় তালিকা and খরচ show 40 rows with **⬇ আরও দেখুন** (search resets it).
 
 **Speed**
-- Home screen (`api/dashboard.js`): deposit, offer-owed and "old lines" count queries ran one after another after the main batch — now one parallel batch. Shop list: the walk-in-customer query runs together with the list.
+- Home screen (`api/dashboard.js`): the deposit, offer-owed and "old lines" count queries ran one after another after the main batch — now all in one parallel batch. Shop list: the walk-in-customer query runs together with the list.
 - Front end: the home-screen request starts at the same moment as the product / DSR / shop / settings lists (it used to wait for them).
-- Login: the business list comes back with the login answer (one request fewer before the business screen appears).
-- Business lookup (`withBiz`): cached 20 s (was 5 s) and simultaneous requests share one lookup — the app fires 4–7 at once. Rename / delete still clears it immediately on the same server.
-- `build.js`: esbuild was escaping every Bengali character to `\uXXXX` (the "minified" page was *bigger* than the source). Fixed with `charset: 'utf8'` — 488 KB → 423 KB.
-- Database: partial index for the "unfrozen old lines" count and `created_at` indexes for the newest-first lists (`schema.sql`; `add-speed-indexes.sql` for an existing database — run once, safe to repeat).
-- Tests: `tests/perf-paging.test.js` (12 checks) + the existing 178 all pass.
+- Business lookup: 1 query per minute per server instead of one per request (the app fires 4–7 requests at once).
+- `build.js`: esbuild was escaping every Bengali character to `\uXXXX` (the "minified" page was *bigger* than the source). Fixed with `charset: 'utf8'` — 488 KB → 415 KB.
+- Database: partial index for the "unfrozen old lines" count and `created_at` indexes for the newest-first lists (`schema.sql`; `add-speed-indexes.sql` for an existing database).
+- Tests: `tests/single-business.test.js` (26 checks) + the existing 178 all pass.
 
 ## v14.0.0 — Step 3 (final): Profit panel, dashboard, reports, role safety
 **Profit = cash profit + offer profit**, always from STORED snapshots (price after the offer deduction, buyPrice, offerDeductionTotal) — never today's price or offer.

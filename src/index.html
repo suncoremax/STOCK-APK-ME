@@ -1045,27 +1045,7 @@ body{font-size:16px!important;line-height:1.5}
 }
 </style>
 
-<style id="biz-css">
-#biz-screen{position:fixed;top:0;left:0;right:0;bottom:0;z-index:8000;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;background:radial-gradient(120% 140% at 15% 0%,#0B2B1E 0%,var(--hdr1) 46%,#000 100%);padding:max(18px,env(safe-area-inset-top)) 16px 28px}
-.biz-wrap{max-width:560px;margin:0 auto}
-.biz-top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
-.biz-logo{width:46px;height:46px;border-radius:14px;background:#fff;overflow:hidden;flex:0 0 auto}
-.biz-logo img{width:100%;height:100%;object-fit:cover;display:block}
-.biz-h{color:#fff;font-size:19px;font-weight:800;font-family:var(--font-disp)}
-.biz-s{color:#9FD9C0;font-size:11.5px;margin-top:2px}
-.biz-out{margin-left:auto;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:999px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
-.biz-card{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1px solid var(--bdr);border-radius:20px;padding:14px;cursor:pointer;font-family:inherit;color:var(--txt);box-shadow:0 10px 28px -14px rgba(0,0,0,.6)}
-.biz-card:active{transform:scale(.99)}
-.biz-av{width:46px;height:46px;border-radius:15px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;background:linear-gradient(135deg,#10B981,#047857)}
-.biz-info{flex:1;min-width:0}
-.biz-nm{font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.biz-cy{font-size:11.5px;color:var(--mt);margin-top:3px}
-.biz-go{font-size:22px;color:var(--mt);flex:0 0 auto}
-.biz-del{flex:0 0 auto;border:1px solid var(--bdr);background:var(--card);color:var(--re);border-radius:16px;padding:8px 12px;cursor:pointer;font-size:15px;line-height:1}
-.biz-add{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:2px dashed rgba(159,217,192,.6);background:rgba(255,255,255,.06);color:#fff;border-radius:20px;padding:16px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:4px}
-.biz-empty{color:#cfeee0;text-align:center;font-size:13px;padding:26px 10px;line-height:1.7}
-.biz-name-chip{font-size:10px;font-weight:700;color:var(--bl);margin:0 0 6px;padding:0 4px}
-</style>
+<style id="biz-css">.biz-name-chip{font-size:10px;font-weight:700;color:var(--bl);margin:0 0 6px;padding:0 4px}</style>
 <style id="v10-css">
 /* ── v10: receivable card, deposits, offer table, report bar ── */
 .rcv-card{background:linear-gradient(135deg,#7C3AED,#5B21B6);color:#fff;border-radius:20px;padding:14px 16px;margin-bottom:12px;cursor:pointer;box-shadow:0 10px 24px -10px rgba(91,33,182,.55);position:relative;overflow:hidden}
@@ -1129,7 +1109,6 @@ body{font-size:16px!important;line-height:1.5}
     </div>
     <div class="hdr-actions">
       <div id="role-badge" style="background:var(--bll);border:1px solid rgba(16,185,129,.35);color:var(--bl);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:700">👑 মালিক</div>
-      <button ontouchstart="switchBiz();event.preventDefault()" onclick="switchBiz()" title="ব্যবসা পরিবর্তন" aria-label="ব্যবসা পরিবর্তন" style="background:var(--card);border:1px solid var(--bdr);color:var(--txt);border-radius:10px;padding:6px 10px;font-size:15px;cursor:pointer;line-height:1;font-family:inherit">🏢</button>
       <button ontouchstart="refreshApp();event.preventDefault()" onclick="refreshApp()" style="background:var(--card);border:1px solid var(--bdr);color:var(--txt);border-radius:10px;padding:6px 10px;font-size:15px;cursor:pointer;line-height:1;font-family:inherit">🔄</button>
     </div>
   </div>
@@ -1219,18 +1198,6 @@ body{font-size:16px!important;line-height:1.5}
   </div>
   <div class="pin-hint">👑 মালিক — আপনার ৫ সংখ্যার PIN দিন</div>
 </div>
-<!-- BUSINESS SCREEN (shown after the PIN — pick which business to open) -->
-<div id="biz-screen">
-  <div class="biz-wrap">
-    <div class="biz-top">
-      <div class="biz-logo"><img src="/logo.png" alt="AXIION DMS"></div>
-      <div><div class="biz-h">আপনার ব্যবসাসমূহ</div><div class="biz-s">যে ব্যবসায় কাজ করবেন তাতে ট্যাপ করুন — প্রতিটির হিসাব আলাদা</div></div>
-      <button class="biz-out" onclick="logout()">লগ আউট</button>
-    </div>
-    <div id="biz-list"></div>
-    <button class="biz-add" onclick="bizAddOpen()">＋ নতুন ব্যবসা যোগ করুন</button>
-  </div>
-</div>
 <script id="app-js">
 // ════════════════════════════════════════════════════
 //  AXIION DMS — Manual (owner-only) edition · core
@@ -1274,12 +1241,10 @@ function api(path, opt) {
   opt = opt || {};
   var h = { 'Content-Type': 'application/json' };
   if (S.token) h.Authorization = 'Bearer ' + S.token;
-  if (S.biz && S.biz.id) h['X-Business-Id'] = S.biz.id;   // every request is for ONE business — the server keeps its data separate
   return fetch('/api/' + path, { method: opt.method || 'GET', headers: h, body: opt.body ? JSON.stringify(opt.body) : undefined })
     .then(function (r) { return r.json(); })
     .then(function (j) {
       if (j && j.auth === true) { forceLogin(); throw new Error('লগইন করুন'); }
-      if (j && j.noBusiness === true) { setTimeout(switchBiz, 900); throw new Error(j.error || 'ব্যবসা বেছে নিন'); }
       return j;
     });
 }
@@ -1387,7 +1352,7 @@ function pinSubmit() {
       S.token = j.token; S.role = j.role || 'owner'; try { sessionStorage.setItem('axiion_token', j.token); localStorage.removeItem('axiion_token'); } catch (e) { }
       pinBusy(false); _pin = ''; pinDots();
       if (j.mustChangePw) return forcePinChange();
-      loadHub(false, j.businesses);
+      loadHub(false, j.business);
     }).catch(function () { clearTimeout(slow); clearTimeout(kill); pinFail('সার্ভারের সাথে যোগাযোগ হচ্ছে না — আবার চেষ্টা করুন'); });
 }
 function forcePinChange() {
@@ -1408,83 +1373,26 @@ function saveFirstPin() {
 }
 function forceLogin(keep) {   // keep=true: show the PIN screen but keep the session (needed to save the very first PIN)
   if (!keep) { S.token = ''; S.biz = null; try { sessionStorage.removeItem('axiion_token'); sessionStorage.removeItem('axiion_biz'); localStorage.removeItem('axiion_token'); } catch (e) { } }
-  $('biz-screen').style.display = 'none'; $('app').classList.remove('show'); $('pin-screen').style.display = 'flex'; $('pin-screen').style.opacity = 1; _pin = ''; pinDots();
+  $('app').classList.remove('show'); $('pin-screen').style.display = 'flex'; $('pin-screen').style.opacity = 1; _pin = ''; pinDots();
 }
 function logout() { closeMenu(); forceLogin(); }
 
-/* ═════════ ব্যবসা — one owner, many businesses (each one's data is completely separate) ═════════ */
-function bizSaveSel(id) { try { if (id) sessionStorage.setItem('axiion_biz', id); else sessionStorage.removeItem('axiion_biz'); } catch (e) { } }
-/* after the PIN: fetch the businesses, then show the list (or go straight back into the business that was open) */
-function loadHub(resume, list) {
+/* ═════════ ব্যবসা — this edition runs ONE business; it opens straight after the PIN (no business list) ═════════ */
+/* after the PIN: `biz` comes with the login answer (no extra request); after a page reload / first-PIN it is fetched once */
+function loadHub(resume, biz) {
   $('pin-screen').style.display = 'none'; $('app').classList.remove('show');
-  $('biz-list').innerHTML = '<div class="biz-empty">লোড হচ্ছে...</div>'; $('biz-screen').style.display = 'block';
-  /* PERF: right after the PIN the login answer already carries the business list — no extra request */
-  return (list ? Promise.resolve({ ok: true, businesses: list }) : GET('auth')).then(function (r) {
-    if (!r || !r.ok) { forceLogin(); setTimeout(function () { pinFail((r && r.error) || 'লোড হয়নি'); }, 50); return; }
-    S.bizList = r.businesses || [];
-    var saved = ''; try { saved = sessionStorage.getItem('axiion_biz') || ''; } catch (e) { }
-    var hit = resume && saved ? S.bizList.filter(function (b) { return b.id === saved; })[0] : null;
-    if (hit) return openBiz(hit.id);
-    bizSaveSel(''); drawHub();
-  }).catch(function () { forceLogin(); });
+  if (biz) return openBiz(biz);
+  busy(true, 'লোড হচ্ছে...');
+  return GET('auth').then(function (r) {
+    busy(false);
+    if (!r || !r.ok || !r.business) { forceLogin(); setTimeout(function () { pinFail((r && r.error) || 'লোড হয়নি'); }, 50); return; }
+    openBiz(r.business);
+  }).catch(function () { busy(false); forceLogin(); });
 }
-function drawHub() {
-  var L = S.bizList || [], h = '';
-  if (!L.length) h = '<div class="biz-empty">এখনো কোনো ব্যবসা নেই।<br>নিচের <b>＋ নতুন ব্যবসা যোগ করুন</b> চেপে প্রথম ব্যবসাটি তৈরি করুন।</div>';
-  L.forEach(function (b) {
-    h += '<div style="display:flex;gap:8px;align-items:stretch;margin-bottom:10px"><button class="biz-card" onclick="openBiz(\'' + b.id + '\')">' +
-      '<span class="biz-av">' + esc((b.name || '?').trim().charAt(0).toUpperCase()) + '</span>' +
-      '<span class="biz-info"><div class="biz-nm">' + esc(b.name) + '</div><div class="biz-cy">📅 ' + esc(cycFull(b.cycleDay)) + '</div></span><span class="biz-go">›</span></button>' +
-      '<button class="biz-del" onclick="bizDel(\'' + b.id + '\')" aria-label="ব্যবসা মুছুন">🗑</button></div>';
-  });
-  $('biz-list').innerHTML = h;
-}
-function openBiz(id) {
-  var b = (S.bizList || []).filter(function (x) { return x.id === id; })[0]; if (!b) return;
+function openBiz(b) {
   S.biz = { id: b.id, name: b.name, cycleDay: b.cycleDay };
-  bizSaveSel(b.id);
-  $('biz-screen').style.display = 'none';
   S.rp = null; S.tx = {}; S.ex = {}; S.loaded = false;
   enterApp();
-}
-/* leave this business (all screens / cached numbers belong to it) and go back to the list */
-function switchBiz() { bizSaveSel(''); try { location.reload(); } catch (e) { } }
-
-function bizAddOpen() {
-  modal('<div class="sc-modal-name">🏢 নতুন ব্যবসা যোগ করুন</div>' +
-    '<div style="font-size:12px;color:var(--mt);margin:6px 0 10px">প্রতিটি ব্যবসার পণ্য, স্টক, DSR/SO, দোকান, বাকি ও রিপোর্ট সম্পূর্ণ আলাদা থাকবে।</div>' +
-    '<div class="fg"><label class="fl">ব্যবসার নাম *</label><input id="nb-name" maxlength="80" placeholder="যেমন: রহিম এন্টারপ্রাইজ"></div>' +
-    '<div class="fg"><label class="fl">মাসের সাইকেল * (মাস কোন তারিখ থেকে শুরু হয়)</label><select id="nb-day" onchange="cycPrev(\'nb-day\',\'nb-prev\')">' + cycDayOptions('') + '</select>' +
-    '<div id="nb-prev" style="font-size:11.5px;color:var(--mt);margin-top:5px">এখনো দেওয়া হয়নি — মালিককে নিজে ঠিক করে দিতে হবে</div></div>' +
-    '<div class="fg"><label class="fl">মোবাইল (মেমোতে ছাপা হবে)</label><input id="nb-phone" maxlength="40" inputmode="tel"></div>' +
-    '<div class="fg"><label class="fl">ঠিকানা</label><input id="nb-addr" maxlength="200"></div>' +
-    '<div class="fg"><label class="fl">মালিক / ডিস্ট্রিবিউটরের নাম</label><input id="nb-own" maxlength="100"></div>' +
-    '<div id="nb-err" style="color:var(--re);font-size:12px;min-height:16px;margin:4px 0"></div>' +
-    '<button class="btn btn-bl btn-w" onclick="bizAddSave()">✅ যোগ করুন</button><button class="btn btn-gh btn-w" style="margin-top:8px" onclick="closeModal()">বাতিল</button>');
-}
-function bizAddSave() {
-  var name = $('nb-name').value.trim(), day = $('nb-day').value;
-  if (!name) { $('nb-err').textContent = 'ব্যবসার নাম দিন'; return; }
-  if (!day) { $('nb-err').textContent = 'মাসের সাইকেল বেছে নিন'; return; }
-  var body = { action: 'biz-add', name: name, cycleDay: +day, phone: $('nb-phone').value.trim(), address: $('nb-addr').value.trim(), ownerName: $('nb-own').value.trim() };
-  askPin('নতুন ব্যবসা যোগ করতে মালিকের PIN দিন', function (pin) {
-    body.pin = pin; busy(true, 'তৈরি হচ্ছে...');
-    POST('auth', body).then(function (r) {
-      busy(false); if (!r.ok) return toast(r.error || 'ত্রুটি', true);
-      closeModal(); toast('ব্যবসা যোগ হয়েছে ✓'); loadHub(false);
-    }).catch(function (e) { busy(false); toast(e.message || 'ত্রুটি', true); });
-  });
-}
-function bizDel(id) {
-  var b = (S.bizList || []).filter(function (x) { return x.id === id; })[0]; if (!b) return;
-  if (!confirm('"' + b.name + '" ব্যবসাটি মুছবেন?\n\nএই ব্যবসার সব পণ্য, স্টক, লেনদেন, DSR/SO, দোকান, বাকি ও রিপোর্ট চিরতরে মুছে যাবে। ফিরিয়ে আনা যাবে না।\n(অন্য ব্যবসার কিছুই মুছবে না)')) return;
-  askPin('"' + b.name + '" মুছতে মালিকের PIN দিন', function (pin) {
-    busy(true, 'মোছা হচ্ছে...');
-    POST('auth', { action: 'biz-del', id: id, pin: pin }).then(function (r) {
-      busy(false); if (!r.ok) return toast(r.error || 'ত্রুটি', true);
-      toast('ব্যবসা মুছে ফেলা হয়েছে'); loadHub(false);
-    }).catch(function (e) { busy(false); toast(e.message || 'ত্রুটি', true); });
-  });
 }
 
 /* ── list paging: long lists show PG rows first; "আরও দেখুন" adds more (keeps phones fast, nothing is hidden for good) ── */
@@ -1575,7 +1483,7 @@ var MENU_ITEMS = [
   { id: 'numbers', lb: 'গুরুত্বপূর্ণ নম্বর', ic: 'phone' }, { id: 'settings', lb: 'সেটিং', ic: 'cog' }];
 /* menu order = how often it is used: the daily work first, rarely-used things last (same as the autonomous app) */
 var MENU_ORDER = ['prod', 'settle', 'psale', 'tx', 'dep', 'offer', 'sr', 'shops', 'duecol', 'rep', 'exp', 'numbers', 'settings'];
-var MENU_COL = { offer: ['#0EA5E9', '#0369A1'], dep: ['#06B6D4', '#0E7490'], bizsw: ['#0EA5E9', '#0369A1'], cycle: ['#F59E0B', '#B45309'], settle: ['#10B981', '#047857'], duecol: ['#EF4444', '#B91C1C'], psale: ['#8B5CF6', '#6D28D9'], tx: ['#3B82F6', '#1D4ED8'], prod: ['#F59E0B', '#D97706'],
+var MENU_COL = { offer: ['#0EA5E9', '#0369A1'], dep: ['#06B6D4', '#0E7490'], cycle: ['#F59E0B', '#B45309'], settle: ['#10B981', '#047857'], duecol: ['#EF4444', '#B91C1C'], psale: ['#8B5CF6', '#6D28D9'], tx: ['#3B82F6', '#1D4ED8'], prod: ['#F59E0B', '#D97706'],
   sr: ['#8B5CF6', '#6D28D9'], shops: ['#F97316', '#C2410C'], rep: ['#6366F1', '#4338CA'], exp: ['#EAB308', '#A16207'], numbers: ['#14B8A6', '#0F766E'],
   settings: ['#64748B', '#334155'], theme: ['#475569', '#1E293B'] };
 var TOPNAV_GROUPS = [];
@@ -1611,8 +1519,7 @@ function buildSideMenu() {
     var it = menuItem(id), c = MENU_COL[id] || ['#10B981', '#047857'];
     h += '<button class="mn-row' + (S.tab === id ? ' active' : '') + '" id="smi-' + id + '" style="--c1:' + c[0] + ';--c2:' + c[1] + '" onclick="selectMenuItem(\'' + id + '\')"><span class="mn-ic">' + axIcon(it.ic) + '</span><span class="t">' + it.lb + '</span></button>';
   });
-  h += '<button class="mn-row" id="smi-cycle" style="--c1:' + MENU_COL.cycle[0] + ';--c2:' + MENU_COL.cycle[1] + '" onclick="closeMenu();gTab(\'settings\');setTimeout(function(){setGo(\'st-card-cycle\')},350)"><span class="mn-ic">' + axIcon('cal') + '</span><span class="t">মাসের সাইকেল (' + cycShort() + ')</span></button>' +
-    '<button class="mn-row" id="smi-bizsw" style="--c1:' + MENU_COL.bizsw[0] + ';--c2:' + MENU_COL.bizsw[1] + '" onclick="closeMenu();switchBiz()"><span class="mn-ic">' + axIcon('store') + '</span><span class="t">ব্যবসা পরিবর্তন</span></button>';
+  h += '<button class="mn-row" id="smi-cycle" style="--c1:' + MENU_COL.cycle[0] + ';--c2:' + MENU_COL.cycle[1] + '" onclick="closeMenu();gTab(\'settings\');setTimeout(function(){setGo(\'st-card-cycle\')},350)"><span class="mn-ic">' + axIcon('cal') + '</span><span class="t">মাসের সাইকেল (' + cycShort() + ')</span></button>';
   h += '<button class="mn-row" id="smi-theme" style="--c1:' + MENU_COL.theme[0] + ';--c2:' + MENU_COL.theme[1] + '" onclick="toggleTheme()"><span class="mn-ic">' + axIcon(dark ? 'sun' : 'moon') + '</span><span class="t">' + (dark ? 'লাইট মোড' : 'ডার্ক মোড') + '</span></button></div>';
   h += '<button class="mn-row mn-row-out" onclick="closeMenu();logout()" style="--c1:#EF4444;--c2:#B91C1C;margin-top:10px;border-color:rgba(239,68,68,.45);color:var(--re)"><span class="mn-ic">' + axIcon('lock') + '</span><span class="t">লগ আউট</span></button>';
   el.innerHTML = h;
@@ -2707,19 +2614,23 @@ function cycDayOptions(sel) {
 function cycPrev(selId, outId) { var v = $(selId).value; $(outId).textContent = v ? cycFull(v) : 'এখনো দেওয়া হয়নি — মালিককে নিজে ঠিক করে দিতে হবে'; }
 /* first setup: the month cycle is never pre-set — the owner must choose it before the app opens */
 function cycleSetupOpen() {
-  modal('<div class="sc-modal-name">📅 মাসের সাইকেল ঠিক করুন</div>' +
-    '<div style="font-size:12px;color:var(--mt);margin:6px 0 10px">আপনার হিসাবের মাস কোন তারিখ থেকে শুরু হয়? হোম, রিপোর্ট, বোনাস ও খরচের "এই মাস" এটি ধরে চলবে। পরে সেটিং থেকে বদলানো যাবে।</div>' +
-    '<div class="fg"><select id="cs-day" onchange="cycPrev(\'cs-day\',\'cs-prev\')">' + cycDayOptions('') + '</select>' +
+  modal('<div class="sc-modal-name">🏢 ব্যবসার নাম ও মাসের সাইকেল</div>' +
+    '<div style="font-size:12px;color:var(--mt);margin:6px 0 10px">প্রথমবার — ব্যবসার নাম দিন এবং হিসাবের মাস কোন তারিখ থেকে শুরু হয় তা বেছে নিন। হোম, রিপোর্ট, বোনাস ও খরচের "এই মাস" এটি ধরে চলবে। পরে সেটিং থেকে বদলানো যাবে।</div>' +
+    '<div class="fg"><label class="fl">ব্যবসার নাম *</label><input id="cs-name" maxlength="80" value="' + esc(S.biz && S.biz.name ? S.biz.name : '') + '"></div>' +
+    '<div class="fg"><label class="fl">মাস কোন তারিখ থেকে শুরু *</label><select id="cs-day" onchange="cycPrev(\'cs-day\',\'cs-prev\')">' + cycDayOptions('') + '</select>' +
     '<div id="cs-prev" style="font-size:11.5px;color:var(--mt);margin-top:5px">এখনো দেওয়া হয়নি — মালিককে নিজে ঠিক করে দিতে হবে</div></div>' +
     '<div id="cs-err" style="color:var(--re);font-size:12px;min-height:16px;margin:8px 0"></div>' +
     '<button class="btn btn-bl btn-w" onclick="cycleSetupSave()">✅ সেভ করে শুরু করুন</button>' +
-    '<button class="btn btn-gh btn-w" style="margin-top:8px" onclick="closeModal();switchBiz()">ব্যবসা পরিবর্তন</button>');
+    '<button class="btn btn-gh btn-w" style="margin-top:8px" onclick="closeModal();logout()">লগ আউট</button>');
 }
 function cycleSetupSave() {
-  var day = $('cs-day').value; if (!day) { $('cs-err').textContent = 'মাস কোন তারিখ থেকে শুরু তা বেছে নিন'; return; }
-  run(function () { return POST('auth', { action: 'biz-update', id: S.biz.id, cycleDay: +day }); }).then(function (r) {
+  var name = $('cs-name').value.trim(), day = $('cs-day').value;
+  if (!name) { $('cs-err').textContent = 'ব্যবসার নাম দিন'; return; }
+  if (!day) { $('cs-err').textContent = 'মাস কোন তারিখ থেকে শুরু তা বেছে নিন'; return; }
+  run(function () { return POST('auth', { action: 'biz-update', name: name, cycleDay: +day, firstSetup: true }); }).then(function (r) {
     if (!r.ok) { $('cs-err').textContent = r.error || 'ত্রুটি'; return; }
-    S.biz.cycleDay = r.business.cycleDay; closeModal(); toast('মাসের সাইকেল সেট হয়েছে ✓'); buildTopNav(); gTab(S.tab || 'dash');
+    S.biz.name = r.business.name; S.biz.cycleDay = r.business.cycleDay; S.shopName = r.business.name;
+    closeModal(); toast('সেভ হয়েছে ✓'); buildTopNav(); gTab(S.tab || 'dash');
   });
 }
 function periodOptions(cur, sel) {
@@ -2982,10 +2893,10 @@ RENDER.settings = function () {
     ['gTab(\'exp\')', 'wallet', 'h2', 'খরচ', 'খরচের খাত ও হিসাব'], ['setGo(\'st-card-cycle\')', 'cal', 'h1', 'মাসের সাইকেল', 'মাস: ' + cycShort()], ['setGo(\'st-card-reset\')', 'trash', 'h5', 'রিসেট সেন্টার', 'ডেটা রিসেট']];
   var h = '<div class="ct">⚙ সেটিং</div><div class="hub">' + hub.map(function (t) { return '<button class="hub-t ' + t[2] + '" onclick="' + t[0] + '">' + axIcon(t[1]) + '<div><b>' + t[3] + '</b><br><small>' + t[4] + '</small></div></button>'; }).join('') + '</div>';
   h += '<div class="card" id="st-card-cycle"><div class="ct">📅 ব্যবসা ও মাসের সাইকেল</div>' +
-    '<div class="fg"><label class="fl">ব্যবসার নাম (ব্যবসার তালিকায় এই নামে দেখায়)</label><input id="cy-name" maxlength="80" value="' + esc(S.biz ? S.biz.name : '') + '"></div>' +
+    '<div class="fg"><label class="fl">ব্যবসার নাম (মেনু ও হেডারে এই নামে দেখায়)</label><input id="cy-name" maxlength="80" value="' + esc(S.biz ? S.biz.name : '') + '"></div>' +
     '<div class="fg"><label class="fl">মাস কোন তারিখ থেকে শুরু হয়</label><select id="cy-day" onchange="cycPrev(\'cy-day\',\'cy-prev\')">' + cycDayOptions(cycDay()) + '</select>' +
     '<div id="cy-prev" style="font-size:11.5px;color:var(--mt);margin-top:5px">' + esc(cycFull(cycDay())) + '</div></div>' +
-    '<div style="font-size:11.5px;color:var(--mt);margin-bottom:10px">হোম, রিপোর্ট, বোনাস ও খরচের "এই মাস" এই সাইকেল ধরে হিসাব হয়। বদলালে পুরনো কোনো লেনদেন মুছে যায় না — শুধু মাসের সীমানা বদলায়। এটি শুধু এই ব্যবসার জন্য।</div>' +
+    '<div style="font-size:11.5px;color:var(--mt);margin-bottom:10px">হোম, রিপোর্ট, বোনাস ও খরচের "এই মাস" এই সাইকেল ধরে হিসাব হয়। বদলালে পুরনো কোনো লেনদেন মুছে যায় না — শুধু মাসের সীমানা বদলায়।</div>' +
     '<button class="btn btn-bl btn-w" onclick="saveCycle()">✅ সেভ</button></div>';
   h += '<div class="card"><div class="ct">🏢 ব্যবসার তথ্য (মেমো ও রসিদে ছাপা হয়)</div>' +
     '<div class="fg"><label class="fl">ব্যবসার নাম</label><input id="st-name" maxlength="100" value="' + esc(S.shopName) + '"></div><div class="fg"><label class="fl">ঠিকানা</label><input id="st-addr" maxlength="200" value="' + esc(S.shopAddress) + '"></div>' +
@@ -3023,7 +2934,7 @@ function saveCycle() {
   var name = $('cy-name').value.trim(), day = $('cy-day').value;
   if (!name) return toast('ব্যবসার নাম দিন', true);
   if (!day) return toast('মাসের সাইকেল বেছে নিন', true);
-  run(function () { return POST('auth', { action: 'biz-update', id: S.biz.id, name: name, cycleDay: +day }); }, 'সেভ হচ্ছে...').then(function (r) {
+  run(function () { return POST('auth', { action: 'biz-update', name: name, cycleDay: +day }); }, 'সেভ হচ্ছে...').then(function (r) {
     if (!r.ok) return toast(r.error || 'ত্রুটি', true);
     S.biz.name = r.business.name; S.biz.cycleDay = r.business.cycleDay;
     toast('সেভ হয়েছে ✓ — নতুন সাইকেল চালু হচ্ছে...'); setTimeout(function () { try { location.reload(); } catch (e) { } }, 700);   // reload = every screen re-reads the new month
@@ -3587,7 +3498,7 @@ function repExport(all) {
 (function () {
   var t = null; try { localStorage.removeItem('axiion_token'); t = sessionStorage.getItem('axiion_token'); } catch (e) { }   // old 30-day saved logins are dropped
   setTimeout(function () { var s = $('spl'); if (s) { s.style.opacity = 0; setTimeout(function () { s.style.display = 'none'; }, 400); } }, 900);
-  if (t) { S.token = t; GET('auth').then(function (r) { if (r && r.ok) { S.role = r.role || 'owner'; if (r.mustChangePw) { forceLogin(true); forcePinChange(); } else { S.bizList = r.businesses || []; loadHub(true); } } else forceLogin(); }).catch(function () { forceLogin(); }); } else forceLogin();
+  if (t) { S.token = t; GET('auth').then(function (r) { if (r && r.ok) { S.role = r.role || 'owner'; if (r.mustChangePw) { forceLogin(true); forcePinChange(); } else { loadHub(true, r.business); } } else forceLogin(); }).catch(function () { forceLogin(); }); } else forceLogin();
 })();
 
 </script>

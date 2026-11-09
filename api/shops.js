@@ -31,6 +31,7 @@ module.exports = withBiz(async (req, res) => {
         const [shops, dues, custRes] = await Promise.all([
           fetchAll(() => supabase.from('shops').select('*').order('created_at', { ascending: false })),
           supabase.rpc('shop_due_totals', { p_shop_ids: null }),
+          // walk-in / named customers with a due but no registered shop (fetched together with the list — one round trip, not two)
           fetchAll(() => supabase.from('due_calendar').select('shop_name,amount,paid_amount').eq('shop_id', '').neq('status', 'cleared'))
         ]);
         const dm = {}; ((dues && dues.data) || []).forEach(r => { dm[String(r.shop_id)] = r2(num(r.due)); });

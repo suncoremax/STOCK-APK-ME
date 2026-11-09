@@ -1,7 +1,7 @@
 {
-  "name": "axiion-dms-multi-business",
-  "version": "14.1.0",
-  "description": "AXIION DMS — Multi-business (one owner, many businesses) edition. Developed by AXIION TECHNOLOGY",
+  "name": "axiion-dms-single-business",
+  "version": "15.0.0",
+  "description": "AXIION DMS — Single-business edition (one owner, one business). Developed by AXIION TECHNOLOGY",
   "private": true,
   "dependencies": {
     "@supabase/supabase-js": "^2.43.0"

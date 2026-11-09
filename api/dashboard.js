@@ -40,7 +40,8 @@ module.exports = withBiz(async (req, res) => {
   if (!requireAuth(req, res)) return;
   try {
     const t = today(), per = cyclePeriodToday(), b = cyclePeriodBounds(per);
-    // PERF: everything the home screen needs is requested at the same time (was 4 queries in a row, each a full round trip).
+    // PERF — everything the home screen needs is requested at the same time (this used to run as 4 queries in a row,
+    // each one a full round trip to Supabase). Optional pieces fail soft so a missing table never blocks the home screen.
     const priv = isPriv(req);
     const [td, cy, srs, prods, shopDue, slips, depRes, offerRes, legacyRes] = await Promise.all([
       period(t, t, priv), period(b.start, b.end, priv),
@@ -49,9 +50,10 @@ module.exports = withBiz(async (req, res) => {
       supabase.from('due_calendar').select('amount,paid_amount').neq('status', 'cleared'),
       supabase.from('dayend_slips').select('*').order('created_at', { ascending: false }).limit(6),
       supabase.from('company_deposits').select('date,online_amt,bank_amt,cash_amt').gte('date', b.start).lte('date', b.end),
-      priv ? offerRange(t, t).catch(() => ({ owed: 0 })) : Promise.resolve({ owed: 0 }),
-      supabase.from('transactions').select('id', { count: 'exact', head: true }).is('rule_case_size', null)
+      priv ? offerRange(t, t).catch(() => ({ owed: 0 })) : Promise.resolve({ owed: 0 }),   // পাওনা অফার (কোম্পানির কাছে) — all-time balance
+      supabase.from('transactions').select('id', { count: 'exact', head: true }).is('rule_case_size', null)   // v11: old lines still waiting for "পুরনো হিসাব ফ্রিজ"
     ]);
+    // v10 — today's deposit to the company + this month's total
     let deposit = { ready: true, today: null, month: { online: 0, bank: 0, cash: 0, total: 0, days: 0 } };
     try {
       if (depRes.error) throw depRes.error;

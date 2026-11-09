@@ -81,10 +81,10 @@ module.exports = withBiz(async (req, res) => {
         if (q.type) query = query.in('type', String(q.type).split(','));
         if (q.srId) query = query.eq('sr_id', String(q.srId));
         if (q.shopId) query = query.eq('shop_id', String(q.shopId));
-        if (q.txId) query = query.eq('tx_id', String(q.txId));   // one memo only (reprint)
+        if (q.txId) query = query.eq('tx_id', String(q.txId));   // one memo only (reprint) — no need to pull thousands of rows
         return query;
       };
-      const data = await fetchUpTo(mk, q.txId ? 500 : limit);   // honours limits above 1000
+      const data = await fetchUpTo(mk, q.txId ? 500 : limit);   // honours limits above 1000 (Supabase caps a single query at 1000)
       return res.json({ ok: true, transactions: (data || []).map(mapTx) });
     }
 

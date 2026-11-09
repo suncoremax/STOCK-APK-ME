@@ -97,8 +97,9 @@ async function fetchAll(queryFactory, opts) {
   return all;
 }
 
-// LIST FIX: `.limit(1500)` / `.limit(5000)` is silently cut to 1000 rows by Supabase (PostgREST max-rows).
+// LIST FIX — `.limit(1500)` / `.limit(5000)` is silently cut to 1000 rows by Supabase (PostgREST max-rows).
 // fetchUpTo pages in 1000-row steps until `limit` rows (or the end of the data) so a "last 1500 entries" list is really 1500.
+// `queryFactory` returns a fresh, already ordered query builder each call.
 async function fetchUpTo(queryFactory, limit) {
   const out = [], cap = Math.max(1, Math.floor(Number(limit)) || 1000);
   for (let from = 0; out.length < cap; from += FETCH_ALL_PAGE_SIZE) {
