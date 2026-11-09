@@ -3,7 +3,7 @@
 //   POST   {action:'add'|...}        see below
 const crypto = require('crypto');
 const { supabase, cors, str, safeErr, num, ds, today, fetchAll, mapShop, mapDue, mapTx, auditLog, idemRun, blockNegativeStock } = require('./_lib/db');
-const { requireAuth, needPin } = require('./_lib/auth');
+const { requireAuth, needPin, withBiz } = require('./_lib/auth');
 const { priceItems, txRow, stockShortage, reverseStock, r2 } = require('./_lib/money');
 const OWNER = { id: 'owner', role: 'owner' };
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -19,7 +19,7 @@ async function shopOf(id) {
   return data;
 }
 
-module.exports = async (req, res) => {
+module.exports = withBiz(async (req, res) => {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (!requireAuth(req, res)) return;
@@ -59,7 +59,8 @@ module.exports = async (req, res) => {
           const items = d.tx_id ? (byTx[String(d.tx_id)] || []) : [];
           entries.push({ kind: d.tx_id ? 'sale' : 'due', id: d.id, txId: d.tx_id || '', at: d.created_at, date: ds(d.entry_date || d.created_at),
             total: num(d.amount), paid: num(d.initial_paid), add: r2(num(d.amount) - num(d.initial_paid)), note: d.note || '', items,
-            commission: items.reduce((s, i) => s + num(i.commissionAmt), 0), discount: items.reduce((s, i) => s + num(i.discountAmt), 0) });
+            commission: items.reduce((s, i) => s + num(i.commissionAmt), 0), discount: items.reduce((s, i) => s + num(i.discountAmt), 0),
+            offer: r2(items.reduce((s, i) => s + num(i.snapshot && i.snapshot.offerDeductionTotal), 0)) });
         });
         cols.forEach(c => entries.push({ kind: c.kind === 'return' ? 'return' : 'collect', id: c.id, at: c.created_at, date: ds(c.date), paid: num(c.amount), add: -num(c.amount), note: c.note || '' }));
         entries.sort((a, b) => String(a.at).localeCompare(String(b.at)));
@@ -116,14 +117,15 @@ module.exports = async (req, res) => {
         if (!shop && !custName) return res.json({ ok: false, error: 'দোকান বেছে নিন বা গ্রাহকের নাম লিখুন' });
         if (action === 'return' && !shop) return res.json({ ok: false, error: 'ফেরতের জন্য নিবন্ধিত দোকান বেছে নিন' });
         const type = action === 'sale' ? 'point_sale' : 'point_damage_return';
-        const pr = await priceItems(d.items, { type, date });
+        const pr = await priceItems(d.items, { type, date, shopId: shop ? String(shop.id) : '' });
         if (!pr.ok) return res.json({ ok: false, error: pr.error });
         if (type === 'point_sale') {
           const short = stockShortage(pr.lines);
           if (short && await blockNegativeStock()) return res.json({ ok: false, error: short });
         }
         const txId = crypto.randomUUID(), now = new Date().toISOString();
-        const gross = r2(pr.lines.reduce((s, l) => s + l.revenue, 0));
+        const gross = r2(pr.lines.reduce((s, l) => s + l.revenue, 0));   // v12: money AFTER the company offer (what the shop really owes before commission / discount)
+        const grossBefore = r2(pr.lines.reduce((s, l) => s + l.gross, 0)), offerTotal = r2(pr.lines.reduce((s, l) => s + (l.offerDeduction || 0), 0));
         const base = { tx_id: txId, type, sr_id: '', sr_name: '', date, slip_no: str(d.slipNo, 40), shop_id: shop ? String(shop.id) : '', customer_id: shop ? '' : custName,
           note: str(d.note, 300), created_at: now };
         const rows = pr.lines.map(l => txRow(l, base));
@@ -139,14 +141,14 @@ module.exports = async (req, res) => {
           const { error } = await supabase.rpc('create_shop_sale', { p_rows: rows, p_due: due });
           if (error) throw error;
           await auditLog(OWNER, 'create', 'transactions', txId, null, { type, shop: due.shop_name, gross, payable, paid });
-          return res.json({ ok: true, txId, date, gross, commission: comm, discount: disc, payable, paid, due: r2(payable - paid), shopName: due.shop_name,
+          return res.json({ ok: true, txId, date, gross, grossBeforeOffer: grossBefore, offer: offerTotal, commission: comm, discount: disc, payable, paid, due: r2(payable - paid), shopName: due.shop_name,
             rows: rows.map(r => mapTx(Object.assign({ id: '' }, r))) });
         }
         const credit = await openDue(String(shop.id));
         const { data: applied, error } = await supabase.rpc('create_shop_return', { p_rows: rows, p_shop_id: String(shop.id), p_credit: Math.min(gross, credit), p_date: date, p_note: 'পণ্য ফেরত' });
         if (error) throw error;
         await auditLog(OWNER, 'create', 'transactions', txId, null, { type, shop: shop.name, gross });
-        return res.json({ ok: true, txId, date, gross, appliedToDue: r2(num(applied)), cashBack: r2(gross - num(applied)), shopName: shop.name,
+        return res.json({ ok: true, txId, date, gross, grossBeforeOffer: grossBefore, offerReversed: offerTotal, appliedToDue: r2(num(applied)), cashBack: r2(gross - num(applied)), shopName: shop.name,
           rows: rows.map(r => mapTx(Object.assign({ id: '' }, r))) });
       }
 
@@ -237,4 +239,4 @@ module.exports = async (req, res) => {
     }
     res.status(405).json({ ok: false, error: 'Method not allowed' });
   } catch (e) { res.json({ ok: false, error: safeErr(e) }); }
-};
+});

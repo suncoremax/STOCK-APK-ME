@@ -1,3 +1,5 @@
+-- ⚠ MULTI-BUSINESS NOTE: this script works on ALL businesses at once. To clean only one business, add
+--   AND p.business_id = '<that business id from the businesses table>'   to the WHERE below.
 -- Removes products from an EXISTING database (run once in Supabase → SQL Editor).
 -- Safe: a product that already appears in any transaction, damage claim or bonus record
 -- is KEPT, so old slips and reports never break. Everything else is deleted.

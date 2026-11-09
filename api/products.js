@@ -1,6 +1,7 @@
 const { supabase, cors, num, now_, mapProduct, str, safeErr, fetchAll } = require('./_lib/db');
 const { resolveThumb, deleteThumb } = require('./_lib/thumb');
-const { requireAuth } = require('./_lib/auth');
+const { requireAuth, withBiz } = require('./_lib/auth');
+const { recordChanges, loadHistory } = require('./_lib/history');
 
 // Stock delta rule — kept identical to the DB trigger
 // (trg_apply_stock_delta / apply_stock_delta() in schema.sql) so this
@@ -11,7 +12,7 @@ const STOCK_TYPE_SIGN = {
   return_company: -1   // v60 — returned to the company: leaves the warehouse
 };
 
-module.exports = async (req, res) => {
+module.exports = withBiz(async (req, res) => {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (!requireAuth(req, res)) return;
@@ -79,6 +80,12 @@ module.exports = async (req, res) => {
           out.remaining += (count || 0);
         }
         return res.json(out);
+      }
+
+      // v11 — dated list of every price / buy price / pieces-per-case / offer change (optionally one product)
+      if (action === 'price-history') {
+        const h = await loadHistory(req.query.productId ? String(req.query.productId) : '');
+        return res.json({ ok: true, history: h.slice(-500).reverse() });
       }
 
       const { data, error } = await supabase.from('products').select('*').order('sort_order').order('created_at');
@@ -154,7 +161,7 @@ module.exports = async (req, res) => {
       if (casePrice < 0 || casePurchasePrice < 0) return res.json({ ok: false, error: 'মূল্য ঋণাত্মক হতে পারবে না' });
       const sp = +(casePrice / caseSize).toFixed(4);
       const pp = +(casePurchasePrice / caseSize).toFixed(4);
-      const { data: existingRow } = await supabase.from('products').select('thumb').eq('id', d.id).single();
+      const { data: existingRow } = await supabase.from('products').select('*').eq('id', d.id).single();
       const thumb = await resolveThumb(d.thumb, existingRow ? existingRow.thumb : '');
       const { error } = await supabase.from('products').update({
         name:                str(d.name, 200),
@@ -173,7 +180,12 @@ module.exports = async (req, res) => {
         thumb
       }).eq('id', d.id);
       if (error) throw error;
-      return res.json({ ok: true });
+      // v11 — log what changed (old -> new, dated). Past slips / reports are NOT touched: they read their own saved snapshot.
+      let logged = 0;
+      if (existingRow) logged = await recordChanges(d.id, str(d.name, 200), existingRow,
+        { selling_price: sp, purchase_price: pp, case_price: casePrice, case_purchase_price: casePurchasePrice, case_size: caseSize,
+          bonus_free_units: num(d.bonusFreeUnits), bonus_cases_req: num(d.bonusCasesReq) || 1, bonus_free_money: num(d.bonusFreeMoney) }, 'owner');
+      return res.json({ ok: true, priceChanges: logged });
     }
 
     if (req.method === 'DELETE') {
@@ -193,4 +205,4 @@ module.exports = async (req, res) => {
   } catch (e) {
     res.json({ ok: false, error: safeErr(e) });
   }
-};
+});

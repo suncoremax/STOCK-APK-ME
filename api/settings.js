@@ -3,8 +3,9 @@
 //   POST {type:'cat'|'expense'|'contact'|'settings'|'reset', ...}
 //   DELETE ?type=cat|expense|contact&id=
 const { supabase, cors, str, safeErr, num, today, fetchAll, mapExpCat, mapExpRecord, auditLog, idemRun } = require('./_lib/db');
-const { requireAuth, needPin } = require('./_lib/auth');
+const { requireAuth, needPin, withBiz } = require('./_lib/auth');
 const { r2 } = require('./_lib/money');
+const { getOfferStart, setOfferStart } = require('./_lib/offer');
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const DEFAULT_CATS = ['গাড়ি ভাড়া', 'বেতন', 'অফিস খরচ', 'বিদ্যুৎ বিল', 'খাবার', 'অন্যান্য'];
 
@@ -14,13 +15,14 @@ const RESET = {
   transactions: { label: 'লেনদেন (দেওয়া, ফেরত, ড্যামেজ, কেনা, বিক্রয়) — স্টক ০ হবে', tables: ['transactions'] },
   slips:        { label: 'দিনশেষ হিসাব ও DSR / SO-র বাকি জমা',                              tables: ['dayend_slips', 'sr_payments'] },
   dues:         { label: 'দোকানের বাকি ও আদায়',                                   tables: ['due_collections', 'due_calendar'] },
-  claims:       { label: 'ড্যামেজ দাবি ও বোনাস রেকর্ড',                            tables: ['dmg_claims', 'bonus'] },
+  claims:       { label: 'ড্যামেজ দাবি, বোনাস রেকর্ড ও কোম্পানি থেকে পাওয়া টাকার রেকর্ড', tables: ['dmg_claims', 'bonus', 'company_receipts'] },
+  deposits:     { label: 'কোম্পানিতে দৈনিক জমার রেকর্ড',                          tables: ['company_deposits'] },
   expenses:     { label: 'খরচের রেকর্ড',                                           tables: ['exp_records'] }
 };
 const settingsOut = (r) => ({ shopName: r.shop_name || '', shopAddress: r.shop_address || '', shopPhone: r.shop_phone || '', distributorName: r.distributor_name || '',
   logoText: r.logo_text || '', blockNegativeStock: r.block_negative_stock !== false });
 
-module.exports = async (req, res) => {
+module.exports = withBiz(async (req, res) => {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (!requireAuth(req, res)) return;
@@ -30,7 +32,8 @@ module.exports = async (req, res) => {
       const type = q.type || 'settings';
       if (type === 'settings') {
         const { data } = await supabase.from('app_settings').select('*').eq('id', 1).maybeSingle();
-        return res.json({ ok: true, settings: settingsOut(data || {}), resetOptions: Object.keys(RESET).map(k => ({ key: k, label: RESET[k].label })) });
+        const so = settingsOut(data || {}); so.offerStartDate = await getOfferStart();   // v12 — "অফার হিসাব শুরুর তারিখ" ('' = not switched on yet)
+        return res.json({ ok: true, settings: so, resetOptions: Object.keys(RESET).map(k => ({ key: k, label: RESET[k].label })) });
       }
       if (type === 'cats') {
         let { data } = await supabase.from('exp_cats').select('*').order('created_at');
@@ -76,6 +79,13 @@ module.exports = async (req, res) => {
         if (error) throw error;
         return res.json({ ok: true, id: String(data.id) });
       }
+      if (d.type === 'offer-start') {   // v12: switch the automatic offer deduction on ("আজ থেকে চালু করুন") or pick / clear the start date
+        const date = d.today === true ? today() : String(d.date || '');
+        if (date && !DATE_RE.test(date)) return res.json({ ok: false, error: 'তারিখ ঠিক নয়' });
+        const v = await setOfferStart(date);
+        await auditLog({ id: 'owner', role: 'owner' }, 'update', 'offer_start', '', null, { offerStartDate: v });
+        return res.json({ ok: true, offerStartDate: v });
+      }
       if (d.type === 'settings') {
         const row = { id: 1, updated_at: new Date().toISOString(), set_by: 'owner' };
         if (d.shopName !== undefined) row.shop_name = str(d.shopName, 100);
@@ -116,4 +126,4 @@ module.exports = async (req, res) => {
     }
     res.status(405).json({ ok: false, error: 'Method not allowed' });
   } catch (e) { res.json({ ok: false, error: safeErr(e) }); }
-};
+});

@@ -1,10 +1,10 @@
 // DSR / SO = names only. Nobody logs in with these; the owner picks them when giving stock or entering a slip.
 const { supabase, cors, str, safeErr, mapSR, getDueTotals, num, auditLog } = require('./_lib/db');
-const { requireAuth, needPin } = require('./_lib/auth');
+const { requireAuth, needPin, withBiz } = require('./_lib/auth');
 const { r2 } = require('./_lib/money');
 const OWNER = { id: 'owner', role: 'owner' };
 
-module.exports = async (req, res) => {
+module.exports = withBiz(async (req, res) => {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (!requireAuth(req, res)) return;
@@ -67,4 +67,4 @@ module.exports = async (req, res) => {
     }
     res.status(405).json({ ok: false, error: 'Method not allowed' });
   } catch (e) { res.json({ ok: false, error: safeErr(e) }); }
-};
+});

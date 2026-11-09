@@ -1,11 +1,52 @@
 // api/_lib/db.js — AXIION DMS (manual / owner-only edition)
 // Shared database client + every calculation helper. Calculation rules are the same as the original DMS.
 const { createClient } = require('@supabase/supabase-js');
+const { AsyncLocalStorage } = require('async_hooks');
 
-const supabase = createClient(
+// ═══════════════ MULTI-BUSINESS ISOLATION ═══════════════
+// One owner, many businesses. Every business-owned table has a `business_id` column. The handlers never
+// have to think about it: `supabase` below is a scoped wrapper that, for the business chosen on the
+// current request (AsyncLocalStorage, set by withBiz in _lib/auth.js), automatically
+//   • adds  .eq('business_id', <id>)  to every select / update / delete,
+//   • stamps business_id on every insert / upsert,
+//   • passes p_biz to every SQL function (rpc).
+// So one business can never read, change or delete another business's rows.
+const rawSupabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
 );
+const bizStore = new AsyncLocalStorage();
+const bizCtx = () => bizStore.getStore() || null;
+const SCOPED_TABLES = new Set(['products', 'srs', 'transactions', 'dmg_claims', 'bonus', 'sr_payments', 'dayend_slips',
+  'exp_cats', 'exp_records', 'shops', 'due_calendar', 'due_collections', 'app_settings', 'important_contacts', 'audit_log',
+  'company_receipts', 'company_deposits', 'product_price_history']);
+const SCOPED_RPC = new Set(['next_sr_display_no', 'next_shop_no', 'insert_tx_rows', 'shop_apply_payment', 'create_shop_sale',
+  'create_shop_return', 'save_day_end', 'dsr_due_totals', 'sales_summary', 'profit_extras', 'bonus_net_units',
+  'sr_sales_totals', 'product_sales_totals', 'shop_due_totals']);
+function needBiz() {
+  const c = bizCtx();
+  if (!c || !c.id) { const e = new Error('NO_BUSINESS'); throw e; }
+  return c.id;
+}
+const supabase = {
+  from(table) {
+    if (!SCOPED_TABLES.has(table)) return rawSupabase.from(table);
+    const biz = needBiz(), t = rawSupabase.from(table);
+    const stamp = (r) => Array.isArray(r) ? r.map(x => Object.assign({}, x, { business_id: biz })) : Object.assign({}, r, { business_id: biz });
+    return {
+      select: (...a) => t.select(...a).eq('business_id', biz),
+      insert: (r, o) => t.insert(stamp(r), o),
+      upsert: (r, o) => t.upsert(stamp(r), o),
+      update: (...a) => t.update(...a).eq('business_id', biz),
+      delete: (...a) => t.delete(...a).eq('business_id', biz)
+    };
+  },
+  rpc(name, args, opt) {
+    if (!SCOPED_RPC.has(name)) return rawSupabase.rpc(name, args, opt);
+    return rawSupabase.rpc(name, Object.assign({}, args || {}, { p_biz: needBiz() }), opt);
+  },
+  storage: rawSupabase.storage
+};
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -105,21 +146,30 @@ function bdtYesterday() { return addDaysStr(bdtToday(), -1); }
 // logic. These helpers are the single source of truth for that mapping;
 // every API file that deals with a monthly period should go through them
 // instead of re-deriving calendar-month bounds itself.
+// The cycle start day (1–28) belongs to each business (businesses.cycle_start_day) and is loaded into the
+// request context by withBiz(). Day S means: a month "YYYY-MM" runs from the S-th of the previous month
+// to the (S−1)-th of YYYY-MM (S=26 → 26th → 25th). S=1 is the plain calendar month.
+function cycleDay() {
+  const c = bizCtx(); const d = c && Number(c.cycleDay);
+  return d >= 1 && d <= 28 ? Math.floor(d) : 26;
+}
+function _pad(n) { return String(n).padStart(2, '0'); }
 function cyclePeriodBounds(period) {
-  // period = 'YYYY-MM', the label of the month the cycle's 25th falls in.
+  // period = 'YYYY-MM', the label of the month the cycle ends in.
   const [y, m] = String(period).split('-').map(Number);
+  const S = cycleDay();
+  if (S === 1) { const last = new Date(Date.UTC(y, m, 0)).getUTCDate(); return { start: `${y}-${_pad(m)}-01`, end: `${y}-${_pad(m)}-${_pad(last)}` }; }
   let py = y, pm = m - 1;
   if (pm < 1) { pm = 12; py -= 1; }
-  const start = `${py}-${String(pm).padStart(2, '0')}-26`;
-  const end   = `${y}-${String(m).padStart(2, '0')}-25`;
-  return { start, end };
+  return { start: `${py}-${_pad(pm)}-${_pad(S)}`, end: `${y}-${_pad(m)}-${_pad(S - 1)}` };
 }
 function cyclePeriodForDate(dateStr) {
   const [y, m, d] = String(dateStr).slice(0, 10).split('-').map(Number);
-  if (d <= 25) return `${y}-${String(m).padStart(2, '0')}`;
+  const S = cycleDay();
+  if (S === 1 || d < S) return `${y}-${_pad(m)}`;
   let ny = y, nm = m + 1;
   if (nm > 12) { nm = 1; ny += 1; }
-  return `${ny}-${String(nm).padStart(2, '0')}`;
+  return `${ny}-${_pad(nm)}`;
 }
 function cyclePeriodToday() { return cyclePeriodForDate(bdtToday()); }
 // Every ISO date string in a cycle period, inclusive, in order.
@@ -133,6 +183,7 @@ function cyclePeriodDates(period) {
 function safeErr(e) {
   if (process.env.NODE_ENV === 'development') return e.message;
   const msg = String(e.message || '');
+  if (msg.includes('NO_BUSINESS')) return 'আগে একটি ব্যবসা বেছে নিন';
   if (msg.includes('STOCK_NEGATIVE')) return 'স্টকে পর্যাপ্ত পণ্য নেই — স্টকের চেয়ে বেশি দেওয়া/বিক্রি করা যাবে না';
   if (msg.includes('duplicate') || msg.includes('unique')) return 'এই তথ্য ইতিমধ্যে আছে';
   if (msg.includes('foreign key') || msg.includes('violates')) return 'সম্পর্কিত তথ্য পাওয়া যায়নি';
@@ -219,7 +270,11 @@ function mapTx(r) {
     // registered shop.
     customerId: String(r.customer_id || ''),
     note: r.note || '',
-    createdAt: r.created_at || ''
+    createdAt: r.created_at || '',
+    // v11 — the snapshot this line was saved with. History / reprints / reports read THIS, never the product's current fields.
+    unitsPerCase: (function () { const v = Number(r.rule_case_size); return v > 0 ? v : 0; })(),   // 0 = old line without a snapshot
+    snapshot: require('./money').snapOf(r),
+    legacy: require('./money').snapOf(r).legacy
   };
 }
 function mapDmg(r) {
@@ -269,6 +324,8 @@ function mapPayment(r) {
     commissionAmt: String(r.commission_amt || 0),
     discountAmt: String(r.discount_amt || 0),
     damageAmt: String(r.damage_amt || 0),
+    bonusAmt: String(r.bonus_amt || 0),
+    otherAmt: String(r.other_amt || 0),
     note: r.note || '',
     createdAt: r.created_at || ''
   };
@@ -357,9 +414,9 @@ async function _bonusGroups(from, to) {
   }
 }
 
-async function computeBonusRangeSummary(from, to) {
+async function computeBonusRangeSummary(from, to, prefetchedProducts) {
   const [prodsRaw, groups] = await Promise.all([
-    fetchAll(() => supabase.from('products').select('*').order('created_at')),
+    prefetchedProducts ? Promise.resolve(prefetchedProducts) : fetchAll(() => supabase.from('products').select('*').order('created_at')),
     _bonusGroups(from, to)
   ]);
   const prods = (prodsRaw || []).map(mapProduct);
@@ -368,12 +425,15 @@ async function computeBonusRangeSummary(from, to) {
   groups.forEach(gr => {
     const p = byId[gr.productId]; if (!p) return;
     // snapshot rule if present, else the product's current rule
+    // v11: a group WITHOUT a snapshot is old data -> no offer (never today's product rule); case size only used to count cases
+    const legacy = gr.cs == null || gr.free == null;
     const cs   = (gr.cs   != null ? num(gr.cs)   : num(p.caseSize))      || 1;
-    const bcr  = (gr.bcr  != null ? num(gr.bcr)  : num(p.bonusCasesReq)) || 1;
-    const free = gr.free  != null ? num(gr.free)  : num(p.bonusFreeUnits);
-    const mny  = gr.money != null ? num(gr.money) : num(p.bonusFreeMoney);
+    const bcr  = (gr.bcr  != null ? num(gr.bcr)  : 1) || 1;
+    const free = legacy ? 0 : num(gr.free);
+    const mny  = legacy ? 0 : num(gr.money);
     if (free <= 0 && mny <= 0) {
       const a0 = acc[p.id] || (acc[p.id] = { totalGiven: 0, totalCases: 0, bonusUnits: 0, bonusMoney: 0, amount: 0 });
+      if (gr.cs != null) a0.cs = cs;
       a0.totalGiven += Math.max(0, gr.net); return;
     }
     const given = Math.max(0, gr.net);
@@ -381,6 +441,7 @@ async function computeBonusRangeSummary(from, to) {
     const mult  = Math.floor(cases / bcr + 1e-9);
     const avgPP = gr.outUnits > 0 ? gr.outCost / gr.outUnits : num(p.purchasePrice);
     const a = acc[p.id] || (acc[p.id] = { totalGiven: 0, totalCases: 0, bonusUnits: 0, bonusMoney: 0, amount: 0 });
+    if (!legacy) a.cs = cs;
     a.totalGiven += given; a.totalCases += cases;
     a.bonusUnits += mult * free; a.bonusMoney += mult * mny;
     a.amount += mult * free * avgPP + mult * mny;
@@ -389,8 +450,8 @@ async function computeBonusRangeSummary(from, to) {
     const a = acc[p.id] || { totalGiven: 0, totalCases: 0, bonusUnits: 0, bonusMoney: 0, amount: 0 };
     return {
       productId: p.id, name: p.name, sku: p.sku, thumb: p.thumb || '',
-      caseSize: num(p.caseSize) || 1, purchasePrice: num(p.purchasePrice), sellingPrice: num(p.sellingPrice),
-      bonusFreeUnits: num(p.bonusFreeUnits), bonusCasesReq: num(p.bonusCasesReq) || 1, bonusFreeMoney: num(p.bonusFreeMoney || 0),
+      caseSize: a.cs || num(p.caseSize) || 1, purchasePrice: num(p.purchasePrice), sellingPrice: num(p.sellingPrice),   // v11: caseSize = the one the sales were saved with
+      bonusFreeUnits: num(p.bonusFreeUnits), bonusCasesReq: num(p.bonusCasesReq) || 1, bonusFreeMoney: num(p.bonusFreeMoney || 0),   // (these three = TODAY's rule, shown as the current rule only)
       totalGiven: a.totalGiven, totalCases: a.totalCases, bonusUnits: a.bonusUnits, bonusMoney: a.bonusMoney,
       amount: Math.round(a.amount * 100) / 100
     };
@@ -428,14 +489,16 @@ async function getProfitExtras(from, to) {
     const r = (data && data[0]) || {};
     return { commission: num(r.commission), discount: num(r.discount), damageLoss: num(r.damage_loss), expenses: num(r.expenses) };
   } catch (e) {
-    const [pay, dmg, exp] = await Promise.all([
-      fetchAll(() => supabase.from('sr_payments').select('commission_amt,discount_amt').gte('date', from).lte('date', to)),
+    // same figures as the profit_extras() SQL function: day-end slips + direct-sale bills
+    const [pay, pts, dmg, exp] = await Promise.all([
+      fetchAll(() => supabase.from('sr_payments').select('commission_amt,discount_amt,bonus_amt,other_amt').gte('date', from).lte('date', to)),
+      fetchAll(() => supabase.from('transactions').select('commission_amt,discount_amt').eq('type', 'point_sale').gte('date', from).lte('date', to)),
       fetchAll(() => supabase.from('dmg_claims').select('total_cost').gte('date', from).lte('date', to)),
       fetchAll(() => supabase.from('exp_records').select('amount').gte('date', from).lte('date', to))
     ]);
     return {
-      commission: pay.reduce((s, r) => s + num(r.commission_amt), 0),
-      discount: pay.reduce((s, r) => s + num(r.discount_amt), 0),
+      commission: pay.reduce((s, r) => s + num(r.commission_amt), 0) + pts.reduce((s, r) => s + num(r.commission_amt), 0),
+      discount: pay.reduce((s, r) => s + num(r.discount_amt) + num(r.bonus_amt) + num(r.other_amt), 0) + pts.reduce((s, r) => s + num(r.discount_amt), 0),
       damageLoss: dmg.reduce((s, r) => s + num(r.total_cost), 0),
       expenses: exp.reduce((s, r) => s + num(r.amount), 0)
     };
@@ -449,9 +512,28 @@ async function getDamageRevenue(from, to) {
   return (rows || []).reduce((s, r) => s + num(r.total_revenue), 0);
 }
 
-async function computeProfit(from, to) {
-  const [sales, extras, bonusRows, rules, damageRev] = await Promise.all([
-    getSalesSummary(from, to), getProfitExtras(from, to), computeBonusRangeSummary(from, to), getProfitRules(), getDamageRevenue(from, to)
+// ── v10 — money RECEIVED from the company (bonus / free offer and damage claims) ──
+// Bonus and damage claims are only a RECEIVABLE until the owner taps "পেয়েছি" (a company_receipts row).
+// Profit counts them only when they have really been received (by received_date). If the table is not
+// installed yet (migration v10 not run) `ready` is false and profit falls back to the old "count the receivable" rule.
+async function getReceived(from, to) {
+  try {
+    const rows = await fetchAll(() => supabase.from('company_receipts').select('kind,amount').gte('received_date', from).lte('received_date', to));
+    const o = { bonus: 0, damage: 0, ready: true };
+    rows.forEach(r => { if (r.kind === 'bonus' || r.kind === 'damage') o[r.kind] += num(r.amount); });
+    return o;
+  } catch (e) {
+    if (_noTable(e)) return { bonus: 0, damage: 0, ready: false };
+    throw e;
+  }
+}
+
+// opts.bonusTo (v14): last date the OLD product-rule bonus receivable may count. From the offer start date the offer is a real
+// deduction on the sale (company offer ledger) — counting the old bonus receivable too would count the offer twice.
+async function computeProfit(from, to, opts) {
+  const bTo = opts && opts.bonusTo !== undefined ? opts.bonusTo : to;
+  const [sales, extras, bonusRows, rules, damageRev, received] = await Promise.all([
+    getSalesSummary(from, to), getProfitExtras(from, to), (bTo && bTo >= from) ? computeBonusRangeSummary(from, bTo < to ? bTo : to) : Promise.resolve([]), getProfitRules(), getDamageRevenue(from, to), getReceived(from, to)
   ]);
   const r2_ = n => Math.round((num(n) + Number.EPSILON) * 100) / 100;
   const revenue = sales.outRev - sales.inRev;
@@ -464,13 +546,18 @@ async function computeProfit(from, to) {
     - (rules.damage     ? extras.damageLoss : 0)
     - (rules.bonus      ? bonus             : 0)
     - (rules.expenses   ? extras.expenses   : 0);
-  // FINAL result of the business for the period — everything counted:
-  //   gross profit − commission − discount − damaged goods the DSR was credited for (never collected)
-  //   + damage claim receivable from the company (at buying price) + bonus/free receivable from the company − expenses
-  const finalProfit = grossProfit - extras.commission - extras.discount - damageRev + extras.damageLoss + bonus - extras.expenses;
+  // BEFORE the company pays (everything that is yet only owed to us is left out):
+  //   gross profit − commission − discount (incl. offer passed on to shops) − damaged goods the DSR was credited for (never collected) − expenses
+  const base = grossProfit - extras.commission - extras.discount - damageRev - extras.expenses;
+  // POTENTIAL result = if the company paid everything it owes for this period (bonus / free + damage claim at buying price)
+  const virtualProfit = base + extras.damageLoss + bonus;
+  // FINAL (real) result = only what the company has really paid (received in this period)
+  const finalProfit = received.ready ? base + received.bonus + received.damage : virtualProfit;
   return {
     from, to, rules,
-    damageRev: r2_(damageRev), finalProfit: r2_(finalProfit),
+    damageRev: r2_(damageRev), finalProfit: r2_(finalProfit), virtualProfit: r2_(virtualProfit), baseProfit: r2_(base),
+    receiptsReady: received.ready, bonusReceived: r2_(received.bonus), damageReceived: r2_(received.damage),
+    receivable: r2_(extras.damageLoss + bonus),
     revenue: r2_(revenue), cost: r2_(cost), grossProfit: r2_(grossProfit),
     commission: r2_(extras.commission), discount: r2_(extras.discount), damageLoss: r2_(extras.damageLoss),
     bonus: r2_(bonus), expenses: r2_(extras.expenses),
@@ -531,11 +618,18 @@ function cpGroups(rows, csMap, groups) {
 async function getCaseTotals(from, to, groups, srId) {
   const types = Array.from(new Set([].concat.apply([], Object.keys(groups).map(g => groups[g]))));
   const [tx, pr] = await Promise.all([
-    fetchAll(() => { let q = supabase.from('transactions').select('product_id,type,total_units').in('type', types).gte('date', from).lte('date', to); if (srId) q = q.eq('sr_id', srId); return q; }),
+    fetchAll(() => { let q = supabase.from('transactions').select('product_id,type,total_units,rule_case_size').in('type', types).gte('date', from).lte('date', to); if (srId) q = q.eq('sr_id', srId); return q; }),
     fetchAll(() => supabase.from('products').select('id,case_size,unit_type'))
   ]);
   const cs = {}; pr.forEach(p => { cs[String(p.id)] = num(p.case_size) || 1; }); withUnits(cs, pr);
-  return cpGroups(tx, cs, groups);
+  // v11: split by the pieces-per-case SAVED on each line (rows of one product with another size are counted under their own size)
+  const rows = [], csx = Object.assign({}, cs); withUnits(csx, pr);
+  (tx || []).forEach(r => {
+    const own = num(r.rule_case_size), k = String(r.product_id || '');
+    if (own > 0 && own !== cs[k]) { const kk = k + '#' + own; csx[kk] = own; csx.__ut[kk] = csx.__ut[k]; rows.push(Object.assign({}, r, { product_id: kk })); }
+    else rows.push(r);
+  });
+  return cpGroups(rows, csx, groups);
 }
 
 async function getProductNetUnits(from, to) {
@@ -671,9 +765,9 @@ async function getDueTotals(srIds) {
 }
 
 module.exports = {
-  supabase, getDueTotals, cors, num, ds, today, now_, str, safeErr, fetchAll, pageParams,
+  supabase, rawSupabase, bizStore, bizCtx, cycleDay, getDueTotals, cors, num, ds, today, now_, str, safeErr, fetchAll, pageParams,
   mapProduct, mapSR, mapShop, mapTx, mapDmg, mapBonus, mapPayment, mapExpCat, mapExpRecord, mapDue, mapSlip,
-  computeBonusRangeSummary,
+  computeBonusRangeSummary, getReceived, _noTable,
   bdtDateStr, bdtToday, addDaysStr, bdtYesterday,
   cyclePeriodBounds, cyclePeriodForDate, cyclePeriodToday, cyclePeriodDates,
   _bonusSign, getSalesSummary, getProfitExtras, getProfitRules, computeProfit, DEFAULT_PROFIT_RULES,

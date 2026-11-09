@@ -5,7 +5,7 @@
 // The token is an HMAC-SHA256 signature over {user, expiry}; the secret is AUTH_SECRET if you set
 // that Vercel variable, otherwise it is derived from SUPABASE_SERVICE_KEY (never sent to the browser).
 const crypto = require('crypto');
-const { supabase } = require('./db');
+const { supabase, rawSupabase, bizStore } = require('./db');
 
 const TTL_MS = 12 * 3600 * 1000;   // 12 hours — then the PIN is asked again
 const SETUP_PIN = '12345';          // first-setup PIN, valid ONLY until the owner has chosen a PIN of their own
@@ -56,4 +56,40 @@ async function needPin(req, res, pin) {
   res.json({ ok: false, error: 'ভুল PIN — আবার চেষ্টা করুন' });
   return false;
 }
-module.exports = { SETUP_PIN, validPin, hashPin, signToken, readToken, requireAuth, verifyOwnerPin, needPin };
+
+// ═══════════════ business selection ═══════════════
+// The browser sends the chosen business in the X-Business-Id header. withBiz() wraps a handler:
+// it checks the session, checks that the business really exists, loads its month-cycle day and then runs
+// the handler inside that business's context — from then on every database call is scoped to it (see db.js).
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const bizCache = new Map();   // id → { at, row }   (5 s — only to save a query on bursts of requests)
+async function loadBusiness(id) {
+  const hit = bizCache.get(id);
+  if (hit && Date.now() - hit.at < 5000) return hit.row;
+  const { data, error } = await rawSupabase.from('businesses').select('id,name,cycle_start_day').eq('id', id).maybeSingle();
+  if (error) throw error;
+  bizCache.set(id, { at: Date.now(), row: data || null });
+  return data || null;
+}
+function forgetBusiness(id) { if (id) bizCache.delete(String(id)); else bizCache.clear(); }
+function withBiz(handler) {
+  return async (req, res) => {
+    if (req.method === 'OPTIONS') return handler(req, res);
+    const h = String((req.headers && (req.headers.authorization || req.headers.Authorization)) || '');
+    if (!readToken(h.replace(/^Bearer\s+/i, ''))) return handler(req, res);   // the handler's own requireAuth answers 401
+    const id = String((req.headers && (req.headers['x-business-id'] || req.headers['X-Business-Id'])) || '').trim();
+    if (!UUID_RE.test(id)) return res.json({ ok: false, noBusiness: true, error: 'আগে একটি ব্যবসা বেছে নিন' });
+    let biz;
+    try { biz = await loadBusiness(id); } catch (e) { return res.json({ ok: false, error: 'ডাটাবেসে সংযোগ হচ্ছে না — আবার চেষ্টা করুন' }); }
+    if (!biz) return res.json({ ok: false, noBusiness: true, error: 'এই ব্যবসাটি আর নেই — আবার বেছে নিন' });
+    // v14 — ROLE SAFETY: anyone who is not owner / manager gets every response scrubbed of profit, buy price, offer and ledger figures
+    const tk = readToken(h.replace(/^Bearer\s+/i, ''));
+    if (tk && !['owner', 'manager'].includes(String(tk.u).toLowerCase())) {
+      const { scrub } = require('./profit'); const j = res.json.bind(res);
+      res.json = (b) => j(scrub(b));
+    }
+    return bizStore.run({ id: String(biz.id), name: biz.name, cycleDay: biz.cycle_start_day }, () => handler(req, res));
+  };
+}
+
+module.exports = { withBiz, forgetBusiness, UUID_RE, SETUP_PIN, validPin, hashPin, signToken, readToken, requireAuth, verifyOwnerPin, needPin };
