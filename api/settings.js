@@ -2,7 +2,7 @@
 //   GET  ?type=cats|expenses|contacts|settings
 //   POST {type:'cat'|'expense'|'contact'|'settings'|'reset', ...}
 //   DELETE ?type=cat|expense|contact&id=
-const { supabase, cors, str, safeErr, num, today, fetchAll, mapExpCat, mapExpRecord, auditLog, idemRun } = require('./_lib/db');
+const { supabase, cors, str, safeErr, num, today, fetchAll, fetchUpTo, mapExpCat, mapExpRecord, auditLog, idemRun } = require('./_lib/db');
 const { requireAuth, needPin, withBiz } = require('./_lib/auth');
 const { r2 } = require('./_lib/money');
 const { getOfferStart, setOfferStart } = require('./_lib/offer');
@@ -45,9 +45,11 @@ module.exports = withBiz(async (req, res) => {
       }
       if (type === 'expenses') {
         const from = DATE_RE.test(q.from || '') ? q.from : null, to = DATE_RE.test(q.to || '') ? q.to : null;
-        let qq = supabase.from('exp_records').select('*').order('date', { ascending: false }).order('created_at', { ascending: false }).limit(2000);
-        if (from) qq = qq.gte('date', from); if (to) qq = qq.lte('date', to);
-        const { data, error } = await qq; if (error) throw error;
+        const data = await fetchUpTo(() => {
+          let qq = supabase.from('exp_records').select('*').order('date', { ascending: false }).order('created_at', { ascending: false }).order('id', { ascending: false });
+          if (from) qq = qq.gte('date', from); if (to) qq = qq.lte('date', to);
+          return qq;
+        }, 3000);
         return res.json({ ok: true, expenses: (data || []).map(mapExpRecord) });
       }
       if (type === 'contacts') {

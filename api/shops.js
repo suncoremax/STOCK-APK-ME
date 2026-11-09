@@ -28,14 +28,14 @@ module.exports = withBiz(async (req, res) => {
     if (req.method === 'GET') {
       const action = q.action || 'list';
       if (action === 'list') {
-        const [shops, dues] = await Promise.all([
+        const [shops, dues, custRes] = await Promise.all([
           fetchAll(() => supabase.from('shops').select('*').order('created_at', { ascending: false })),
-          supabase.rpc('shop_due_totals', { p_shop_ids: null })
+          supabase.rpc('shop_due_totals', { p_shop_ids: null }),
+          fetchAll(() => supabase.from('due_calendar').select('shop_name,amount,paid_amount').eq('shop_id', '').neq('status', 'cleared'))
         ]);
         const dm = {}; ((dues && dues.data) || []).forEach(r => { dm[String(r.shop_id)] = r2(num(r.due)); });
         const list = shops.map(mapShop); list.forEach(s => { s.due = dm[s.id] || 0; });
-        // walk-in / named customers with a due but no registered shop
-        const { data: cust } = await supabase.from('due_calendar').select('shop_name,amount,paid_amount').eq('shop_id', '').neq('status', 'cleared');
+        const cust = custRes;
         const cm = {};
         (cust || []).forEach(r => { const k = r.shop_name || 'গ্রাহক'; cm[k] = r2((cm[k] || 0) + Math.max(0, num(r.amount) - num(r.paid_amount))); });
         return res.json({ ok: true, shops: list, customers: Object.keys(cm).map(k => ({ name: k, due: cm[k] })).filter(c => c.due > 0) });

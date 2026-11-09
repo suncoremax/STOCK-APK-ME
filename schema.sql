@@ -441,6 +441,11 @@ CREATE INDEX idx_due_biz_shop     ON due_calendar(business_id, shop_id);
 CREATE INDEX idx_due_biz_date     ON due_calendar(business_id, entry_date);
 CREATE INDEX idx_duecol_biz_date  ON due_collections(business_id, date);
 CREATE INDEX idx_contacts_biz     ON important_contacts(business_id);
+-- SPEED: history lists read newest-first; the home screen counts "old lines not yet frozen" (partial index = empty once frozen → instant)
+CREATE INDEX IF NOT EXISTS idx_tx_biz_created  ON transactions(business_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_tx_biz_legacy   ON transactions(business_id) WHERE rule_case_size IS NULL;
+CREATE INDEX IF NOT EXISTS idx_slips_biz_created ON dayend_slips(business_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pay_biz_created   ON sr_payments(business_id, created_at DESC);
 CREATE INDEX idx_audit_biz        ON audit_log(business_id, at DESC);
 
 -- ═══════════════════════════════════════════════════════════════════

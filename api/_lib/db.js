@@ -97,6 +97,21 @@ async function fetchAll(queryFactory, opts) {
   return all;
 }
 
+// LIST FIX: `.limit(1500)` / `.limit(5000)` is silently cut to 1000 rows by Supabase (PostgREST max-rows).
+// fetchUpTo pages in 1000-row steps until `limit` rows (or the end of the data) so a "last 1500 entries" list is really 1500.
+async function fetchUpTo(queryFactory, limit) {
+  const out = [], cap = Math.max(1, Math.floor(Number(limit)) || 1000);
+  for (let from = 0; out.length < cap; from += FETCH_ALL_PAGE_SIZE) {
+    const take = Math.min(FETCH_ALL_PAGE_SIZE, cap - out.length);
+    const { data, error } = await queryFactory().range(from, from + take - 1);
+    if (error) throw error;
+    const rows = data || [];
+    for (let k = 0; k < rows.length; k++) out.push(rows[k]);
+    if (rows.length < take) break;
+  }
+  return out;
+}
+
 // v5.1 (PERF-1) — REAL server-side paging for list screens.
 // ?page=1&pageSize=50  (pageSize capped at 200).  Returns {page,pageSize,from,to}
 // where from/to are the inclusive .range() bounds. When the caller sends no
@@ -765,7 +780,7 @@ async function getDueTotals(srIds) {
 }
 
 module.exports = {
-  supabase, rawSupabase, bizStore, bizCtx, cycleDay, getDueTotals, cors, num, ds, today, now_, str, safeErr, fetchAll, pageParams,
+  supabase, rawSupabase, bizStore, bizCtx, cycleDay, getDueTotals, cors, num, ds, today, now_, str, safeErr, fetchAll, fetchUpTo, pageParams,
   mapProduct, mapSR, mapShop, mapTx, mapDmg, mapBonus, mapPayment, mapExpCat, mapExpRecord, mapDue, mapSlip,
   computeBonusRangeSummary, getReceived, _noTable,
   bdtDateStr, bdtToday, addDaysStr, bdtYesterday,

@@ -1,7 +1,7 @@
 // Stock movements typed by the owner: কেনা (buy) · দেওয়া (give) · ফেরত (return) · কোম্পানিতে ফেরত (return_company) · ড্যামেজ (damage)
 // (Direct shop sales live in shops.js; the full day-end slip lives in payments.js.)
 const crypto = require('crypto');
-const { supabase, cors, str, safeErr, num, ds, today, fetchAll, mapTx, auditLog, idemRun, blockNegativeStock, getDueTotals } = require('./_lib/db');
+const { supabase, cors, str, safeErr, num, ds, today, fetchAll, fetchUpTo, mapTx, auditLog, idemRun, blockNegativeStock, getDueTotals } = require('./_lib/db');
 const { requireAuth, needPin, withBiz } = require('./_lib/auth');
 const { priceItems, txRow, stockShortage, reverseStock, r2, lineOffer, loadProducts } = require('./_lib/money');
 const { loadHistory, valueAt } = require('./_lib/history');
@@ -74,14 +74,17 @@ module.exports = withBiz(async (req, res) => {
       }
       const from = DATE_RE.test(q.from || '') ? q.from : null, to = DATE_RE.test(q.to || '') ? q.to : null;
       const limit = Math.min(Number(q.limit) || 1500, 5000);
-      let query = supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(limit);
-      if (from) query = query.gte('date', from);
-      if (to) query = query.lte('date', to);
-      if (q.type) query = query.in('type', String(q.type).split(','));
-      if (q.srId) query = query.eq('sr_id', String(q.srId));
-      if (q.shopId) query = query.eq('shop_id', String(q.shopId));
-      const { data, error } = await query;
-      if (error) throw error;
+      const mk = () => {
+        let query = supabase.from('transactions').select('*').order('created_at', { ascending: false }).order('id', { ascending: false });
+        if (from) query = query.gte('date', from);
+        if (to) query = query.lte('date', to);
+        if (q.type) query = query.in('type', String(q.type).split(','));
+        if (q.srId) query = query.eq('sr_id', String(q.srId));
+        if (q.shopId) query = query.eq('shop_id', String(q.shopId));
+        if (q.txId) query = query.eq('tx_id', String(q.txId));   // one memo only (reprint)
+        return query;
+      };
+      const data = await fetchUpTo(mk, q.txId ? 500 : limit);   // honours limits above 1000
       return res.json({ ok: true, transactions: (data || []).map(mapTx) });
     }
 

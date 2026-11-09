@@ -6,7 +6,7 @@
 //   GET  ?action=slips | slip&id= | payments
 //   DELETE ?action=slip&id=&pin=        undo a slip (stock + money go back)
 const crypto = require('crypto');
-const { supabase, cors, str, safeErr, num, ds, today, fetchAll, mapSlip, mapPayment, mapTx, getDueTotals, auditLog, idemRun } = require('./_lib/db');
+const { supabase, cors, str, safeErr, num, ds, today, fetchAll, fetchUpTo, mapSlip, mapPayment, mapTx, getDueTotals, auditLog, idemRun } = require('./_lib/db');
 const { requireAuth, needPin, withBiz } = require('./_lib/auth');
 const { priceItems, txRow, reverseStock, r2, loadProducts, snapOf } = require('./_lib/money');
 const { lineDeduction, grossOf } = require('./_lib/offer');
@@ -104,10 +104,12 @@ module.exports = withBiz(async (req, res) => {
       }
       if (action === 'slips') {
         const from = DATE_RE.test(q.from || '') ? q.from : null, to = DATE_RE.test(q.to || '') ? q.to : null;
-        let qq = supabase.from('dayend_slips').select('*').order('created_at', { ascending: false }).limit(Math.min(Number(q.limit) || 300, 2000));
-        if (from) qq = qq.gte('date', from); if (to) qq = qq.lte('date', to);
-        if (q.dsrId) qq = qq.eq('dsr_id', String(q.dsrId));
-        const { data, error } = await qq; if (error) throw error;
+        const data = await fetchUpTo(() => {
+          let qq = supabase.from('dayend_slips').select('*').order('created_at', { ascending: false }).order('id', { ascending: false });
+          if (from) qq = qq.gte('date', from); if (to) qq = qq.lte('date', to);
+          if (q.dsrId) qq = qq.eq('dsr_id', String(q.dsrId));
+          return qq;
+        }, Math.min(Number(q.limit) || 1000, 3000));
         return res.json({ ok: true, slips: (data || []).map(mapSlip) });
       }
       if (action === 'slip') {
@@ -123,10 +125,12 @@ module.exports = withBiz(async (req, res) => {
       }
       if (action === 'payments') {
         const from = DATE_RE.test(q.from || '') ? q.from : null, to = DATE_RE.test(q.to || '') ? q.to : null;
-        let qq = supabase.from('sr_payments').select('*').order('created_at', { ascending: false }).limit(Math.min(Number(q.limit) || 500, 3000));
-        if (from) qq = qq.gte('date', from); if (to) qq = qq.lte('date', to);
-        if (q.srId) qq = qq.eq('sr_id', String(q.srId));
-        const { data, error } = await qq; if (error) throw error;
+        const data = await fetchUpTo(() => {
+          let qq = supabase.from('sr_payments').select('*').order('created_at', { ascending: false }).order('id', { ascending: false });
+          if (from) qq = qq.gte('date', from); if (to) qq = qq.lte('date', to);
+          if (q.srId) qq = qq.eq('sr_id', String(q.srId));
+          return qq;
+        }, Math.min(Number(q.limit) || 1000, 3000));
         return res.json({ ok: true, payments: (data || []).map(mapPayment) });
       }
       return res.json({ ok: false, error: 'Unknown action' });

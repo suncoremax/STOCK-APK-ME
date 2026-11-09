@@ -40,33 +40,35 @@ module.exports = withBiz(async (req, res) => {
   if (!requireAuth(req, res)) return;
   try {
     const t = today(), per = cyclePeriodToday(), b = cyclePeriodBounds(per);
-    const [td, cy, srs, prods, shopDue, slips] = await Promise.all([
-      period(t, t, isPriv(req)), period(b.start, b.end, isPriv(req)),
+    // PERF: everything the home screen needs is requested at the same time (was 4 queries in a row, each a full round trip).
+    const priv = isPriv(req);
+    const [td, cy, srs, prods, shopDue, slips, depRes, offerRes, legacyRes] = await Promise.all([
+      period(t, t, priv), period(b.start, b.end, priv),
       supabase.from('srs').select('id,name,role,display_no').order('role').order('display_no'),
       fetchAll(() => supabase.from('products').select('*').order('sort_order')),
       supabase.from('due_calendar').select('amount,paid_amount').neq('status', 'cleared'),
-      supabase.from('dayend_slips').select('*').order('created_at', { ascending: false }).limit(6)
+      supabase.from('dayend_slips').select('*').order('created_at', { ascending: false }).limit(6),
+      supabase.from('company_deposits').select('date,online_amt,bank_amt,cash_amt').gte('date', b.start).lte('date', b.end),
+      priv ? offerRange(t, t).catch(() => ({ owed: 0 })) : Promise.resolve({ owed: 0 }),
+      supabase.from('transactions').select('id', { count: 'exact', head: true }).is('rule_case_size', null)
     ]);
-    // v10 — today's deposit to the company + this month's total
     let deposit = { ready: true, today: null, month: { online: 0, bank: 0, cash: 0, total: 0, days: 0 } };
     try {
-      const { data: dr, error: de } = await supabase.from('company_deposits').select('date,online_amt,bank_amt,cash_amt').gte('date', b.start).lte('date', b.end);
-      if (de) throw de;
-      (dr || []).forEach(r => {
+      if (depRes.error) throw depRes.error;
+      (depRes.data || []).forEach(r => {
         const o = num(r.online_amt), bk = num(r.bank_amt), c = num(r.cash_amt), m = deposit.month;
         m.online += o; m.bank += bk; m.cash += c; m.total += o + bk + c; m.days++;
         if (String(r.date).slice(0, 10) === t) deposit.today = { online: r2(o), bank: r2(bk), cash: r2(c), total: r2(o + bk + c) };
       });
       Object.keys(deposit.month).forEach(k => { deposit.month[k] = r2(deposit.month[k]); });
     } catch (e) { if (_noTable(e)) deposit = { ready: false, today: null, month: { online: 0, bank: 0, cash: 0, total: 0, days: 0 } }; else throw e; }
-    let offerOwed = 0; if (isPriv(req)) { try { offerOwed = (await offerRange(t, t)).owed; } catch (e) { offerOwed = 0; } }   // পাওনা অফার (কোম্পানির কাছে) — all-time balance
+    const offerOwed = (offerRes && offerRes.owed) || 0;
     const list = srs.data || [];
     const dues = await getDueTotals(list.map(s => String(s.id)));
     const dsrs = list.map(s => { const o = dues[String(s.id)] || { givenRev: 0, returnRev: 0, payments: 0 };
       return { id: String(s.id), name: s.name, role: s.role, displayNo: s.display_no, due: r2(o.givenRev - o.returnRev - o.payments) }; });
     const P = prods.map(mapProduct);
-    let legacyPending = 0;   // v11: old lines still waiting for "পুরনো হিসাব ফ্রিজ" (owner warning on the home screen)
-    try { const c = await supabase.from('transactions').select('id', { count: 'exact', head: true }).is('rule_case_size', null); legacyPending = c.count || 0; } catch (e) {}
+    const legacyPending = (legacyRes && !legacyRes.error && legacyRes.count) || 0;
     res.json({ ok: true, legacyPending, offerOwed: r2(offerOwed), today: t, period: per, bounds: b, todayStats: td, cycleStats: cy, dsrs, deposit,
       totalDsrDue: r2(dsrs.reduce((s, d) => s + Math.max(0, d.due), 0)),
       totalShopDue: r2((shopDue.data || []).reduce((s, r) => s + Math.max(0, num(r.amount) - num(r.paid_amount)), 0)),

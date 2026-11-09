@@ -62,14 +62,20 @@ async function needPin(req, res, pin) {
 // it checks the session, checks that the business really exists, loads its month-cycle day and then runs
 // the handler inside that business's context — from then on every database call is scoped to it (see db.js).
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const bizCache = new Map();   // id → { at, row }   (5 s — only to save a query on bursts of requests)
+const bizCache = new Map();      // id → { at, row }  (20 s: saves a query on every request; rename / delete clears it at once on this server)
+const bizInflight = new Map();   // id → promise: requests that arrive together (the app fires 4–7 at start) share ONE lookup
 async function loadBusiness(id) {
   const hit = bizCache.get(id);
-  if (hit && Date.now() - hit.at < 5000) return hit.row;
-  const { data, error } = await rawSupabase.from('businesses').select('id,name,cycle_start_day').eq('id', id).maybeSingle();
-  if (error) throw error;
-  bizCache.set(id, { at: Date.now(), row: data || null });
-  return data || null;
+  if (hit && Date.now() - hit.at < 20000) return hit.row;
+  if (bizInflight.has(id)) return bizInflight.get(id);
+  const p = (async () => {
+    const { data, error } = await rawSupabase.from('businesses').select('id,name,cycle_start_day').eq('id', id).maybeSingle();
+    if (error) throw error;
+    bizCache.set(id, { at: Date.now(), row: data || null });
+    return data || null;
+  })();
+  bizInflight.set(id, p);
+  try { return await p; } finally { bizInflight.delete(id); }
 }
 function forgetBusiness(id) { if (id) bizCache.delete(String(id)); else bizCache.clear(); }
 function withBiz(handler) {

@@ -32,6 +32,12 @@ It adds `company_receipts`, `company_deposits` and one-entry-per-day unique inde
 If old duplicate rows exist the index step is skipped with a NOTICE — delete the duplicates and run the file again.
 Until it is run the app still works (profit falls back to the old formula) and shows a warning.
 
+## 1D. Speed (v14.1)
+- **Run `add-speed-indexes.sql` once** in the Supabase SQL Editor if your database already exists (a brand-new install gets it from `schema.sql`). Safe to repeat; it only adds indexes.
+- **Vercel → Project → Settings → Functions → Function Region**: choose the region closest to your Supabase project (Supabase → Project Settings → General shows it; e.g. Singapore ↔ `sin1`). The API makes several database calls per screen; if the two are on different continents every call adds 200–300 ms. Redeploy after changing it.
+- Free Supabase projects pause after 1 week without use; the first request after a pause is slow — open the app once to wake it.
+- Long lists show 40 rows with **⬇ আরও দেখুন**; the server returns the full data beyond Supabase's 1000-row cap.
+
 ## 2. GitHub → Vercel
 1. Push this folder to a GitHub repository.
 2. vercel.com → Add New → Project → import the repo (no framework preset needed).

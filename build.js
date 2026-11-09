@@ -6,7 +6,7 @@ const SRC = path.join(__dirname, 'src', 'index.html'), OUT = path.join(__dirname
 let html = fs.readFileSync(SRC, 'utf8');
 try {
   const esbuild = require('esbuild');
-  const min = (code, loader) => esbuild.transformSync(code, { loader, minifyWhitespace: true, minifySyntax: false, minifyIdentifiers: false, target: 'es2019', legalComments: 'none' }).code;
+  const min = (code, loader) => esbuild.transformSync(code, { loader, minifyWhitespace: true, minifySyntax: false, minifyIdentifiers: false, target: 'es2019', legalComments: 'none', charset: 'utf8' }).code;
   let n = 0;
   const SCRIPT = /<script(?![^>]*\bsrc=)([^>]*)>([\s\S]*?)<\/script>/g;
   const css = (seg) => seg.replace(/<style([^>]*)>([\s\S]*?)<\/style>/g, (m, attrs, c) => {

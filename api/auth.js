@@ -32,7 +32,10 @@ module.exports = async (req, res) => {
       if (throttled(ip)) return res.json({ ok: false, error: 'অনেকবার ভুল হয়েছে — ১০ মিনিট পরে চেষ্টা করুন' });
       const pin = String(d.password || '').trim();
       // tell a wrong PIN apart from a broken setup (wrong Supabase keys / schema.sql not run yet)
-      const probe = await supabase.from('user_passwords').select('user_key,user_name,password,must_change_pw').eq('user_key', 'owner').maybeSingle();
+      const [probe, bizList] = await Promise.all([
+        supabase.from('user_passwords').select('user_key,user_name,password,must_change_pw').eq('user_key', 'owner').maybeSingle(),
+        listBusinesses().catch(() => null)   // fetched together with the PIN check: the business list then needs no extra request
+      ]);
       if (probe.error) return res.json({ ok: false, error: 'ডাটাবেসে সংযোগ হচ্ছে না — Vercel-এ SUPABASE_URL ও SUPABASE_SERVICE_KEY (service_role) ঠিক আছে কিনা এবং schema.sql চালানো হয়েছে কিনা দেখুন' });
       // FIRST SETUP: if the Owner row is missing, create it with the setup PIN (12345) — no manual SQL needed.
       if (!probe.data) {
@@ -49,14 +52,15 @@ module.exports = async (req, res) => {
         return res.json({ ok: false, error: 'ভুল পাসওয়ার্ড' });
       }
       const data = probe.data;   // already loaded above — no extra database round trips
-      return res.json({ ok: true, role: 'owner', userId: 'owner', userName: (data && data.user_name) || 'Owner', token: signToken('owner'), mustChangePw: !!(data && data.must_change_pw) });
+      return res.json({ ok: true, role: 'owner', userId: 'owner', userName: (data && data.user_name) || 'Owner', token: signToken('owner'), mustChangePw: !!(data && data.must_change_pw), businesses: bizList || undefined });
     }
     // everything below needs a valid session
     if (!requireAuth(req, res)) return;
 
     if (req.method === 'GET') {
-      const { data: st } = await supabase.from('user_passwords').select('must_change_pw').eq('user_key', 'owner').maybeSingle();
+      const stP = supabase.from('user_passwords').select('must_change_pw').eq('user_key', 'owner').maybeSingle();
       let businesses = []; try { businesses = await listBusinesses(); } catch (e) { return res.json({ ok: false, error: 'ডাটাবেসে সংযোগ হচ্ছে না — schema.sql / migrate-v7-multi-business.sql চালানো হয়েছে কিনা দেখুন' }); }
+      const { data: st } = await stP;
       return res.json({ ok: true, role: 'owner', userId: 'owner', today: bdtToday(), mustChangePw: !!(st && st.must_change_pw), businesses });
     }
 
